@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Backoffice — follow up (demo)</title>
+<style>
+  :root {
+    --blackish: #2D2D2B;
+    --wheat: #B8926A;
+    --dusty-rose: #D4C8BE;
+    --wind: #B0B0B0;
+    --breath: #EAE6DF;
+    --sage: #C3D3BC;
+
+    --bg: var(--breath);
+    --panel: #FFFFFF;
+    --panel-border: #C9C5BD;
+    --accent-soft: rgba(184, 146, 106, 0.14);
+    --row-alt: rgba(212, 200, 190, 0.30);
+    --text: var(--blackish);
+    --text-dim: #6F6D68;
+    --text-faint: #8E887C;
+    --shadow-card: 0 1px 2px rgba(45, 45, 43, 0.05), 0 4px 14px rgba(45, 45, 43, 0.05);
+    --ease: cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    display: flex; flex-direction: column; min-height: 100vh;
+  }
+  button, select, textarea { font-family: inherit; }
+  :focus-visible { outline: 2px solid #92714F; outline-offset: 2px; }
+
+  .pii { filter: blur(7px); user-select: none; pointer-events: none; }
+
+  header {
+    position: relative;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 30px 24px 22px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--panel-border);
+  }
+  .back-btn {
+    position: absolute; left: 32px; top: 30px;
+    background: transparent; color: var(--text-dim);
+    border: 1px solid var(--panel-border);
+    padding: 8px 18px; font-size: 13px; letter-spacing: 0.03em;
+    border-radius: 3px; text-decoration: none; white-space: nowrap;
+    transition: border-color .15s var(--ease), color .15s var(--ease), transform .15s var(--ease);
+  }
+  .back-btn:hover { border-color: var(--wheat); color: var(--blackish); transform: translateY(-1px); }
+  h1 {
+    font-weight: 700; font-size: 26px; letter-spacing: 0.14em; text-indent: 0.14em;
+    margin: 0 0 12px;
+  }
+  .header-rule { width: 64px; height: 3px; background: var(--wheat); border-radius: 2px; }
+
+  main { flex: 1; padding: 34px 40px 48px; display: flex; justify-content: center; }
+  .page-wrap { width: 100%; max-width: 1220px; min-width: 0; }
+
+  .section-label {
+    font-size: 12px; letter-spacing: 0.12em; color: var(--text-dim);
+    margin-bottom: 10px; text-transform: uppercase;
+  }
+
+  .status-row {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--text-dim); margin-bottom: 20px;
+  }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #4C9A5C; flex: none; }
+
+  /* ---------- Stat cards ---------- */
+  .stats-strip {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px; margin-bottom: 22px;
+  }
+  .stat-card {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: 8px; padding: 14px 16px; box-shadow: var(--shadow-card);
+  }
+  .stat-icon {
+    flex: 0 0 34px; width: 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--accent-soft);
+  }
+  .stat-icon svg { width: 16px; height: 16px; stroke: var(--wheat); }
+  .stat-icon svg circle[fill] { fill: var(--wheat); }
+  .stat-info { min-width: 0; }
+  .stat-value { font-size: 20px; font-weight: 700; line-height: 1.15; }
+  .stat-label {
+    font-size: 10.5px; letter-spacing: 0.05em; text-transform: uppercase;
+    color: var(--text-dim); margin-top: 3px;
+  }
+  .stat-card.has-issues .stat-icon { background: rgba(193, 85, 74, 0.12); }
+  .stat-card.has-issues .stat-icon svg { stroke: #C1554A; }
+  .stat-card.has-issues .stat-icon svg circle[fill] { fill: #C1554A; }
+  .stat-card.has-issues .stat-value { color: #C1554A; }
+
+  /* ---------- Toolbar ---------- */
+  .entries-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap; margin-bottom: 16px;
+  }
+  .entries-toolbar-left { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; flex: 1 1 auto; min-width: 0; }
+
+  .view-tabs {
+    display: inline-flex; align-items: center; gap: 3px;
+    background: rgba(176, 176, 176, 0.16);
+    border: 1px solid var(--panel-border); border-radius: 24px; padding: 3px;
+  }
+  .view-tab {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: transparent; border: none; color: var(--text-dim);
+    font-size: 12.5px; font-weight: 600; padding: 7px 14px;
+    border-radius: 20px; cursor: pointer;
+    transition: background .2s var(--ease), color .2s var(--ease), box-shadow .2s var(--ease);
+  }
+  .view-tab:hover { color: var(--text); }
+  .view-tab.active { background: var(--panel); color: var(--blackish); box-shadow: var(--shadow-card); }
+  .view-tab .tab-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--wheat); flex-shrink: 0; }
+  .view-tab[data-view="posted"] .tab-dot { background: var(--sage); border: 1px solid #9db496; }
+  .tab-count {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 19px; height: 19px; padding: 0 5px; border-radius: 10px;
+    background: rgba(45, 45, 43, 0.12); color: var(--text-dim);
+    font-size: 11px; font-weight: 700;
+  }
+  .view-tab[data-view="active"].active .tab-count { background: var(--wheat); color: #fff; }
+  .view-tab[data-view="posted"].active .tab-count { background: var(--sage); color: var(--blackish); }
+
+  .search-wrap { position: relative; display: flex; align-items: center; flex: 0 1 260px; min-width: 160px; }
+  .search-icon { position: absolute; left: 12px; width: 14px; height: 14px; color: var(--text-dim); pointer-events: none; }
+  .search-input {
+    width: 100%; border: 1px solid var(--panel-border); background: var(--panel);
+    border-radius: 20px; padding: 8px 30px 8px 34px; font-size: 13px; color: var(--text);
+    outline: none; transition: border-color .15s var(--ease), box-shadow .15s var(--ease);
+  }
+  .search-input::placeholder { color: var(--text-faint); }
+  .search-input:focus { border-color: var(--wheat); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .search-clear-btn {
+    position: absolute; right: 5px; width: 21px; height: 21px;
+    display: none; align-items: center; justify-content: center;
+    background: transparent; border: none; color: var(--text-dim);
+    font-size: 15px; line-height: 1; cursor: pointer; border-radius: 50%;
+  }
+  .search-clear-btn.show { display: flex; }
+  .search-clear-btn:hover { background: var(--dusty-rose); color: var(--blackish); }
+
+  /* ---------- Table ---------- */
+  .entries-box {
+    background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: 8px; overflow-y: auto; overflow-x: auto;
+    max-height: 660px; box-shadow: var(--shadow-card);
+    scrollbar-width: thin; scrollbar-color: var(--panel-border) transparent;
+  }
+  .entries-box::-webkit-scrollbar { height: 8px; width: 8px; }
+  .entries-box::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 4px; }
+  .entries-empty { padding: 28px 20px; text-align: center; color: var(--text-dim); font-size: 13px; }
+
+  .entries-head-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 9px 16px; border-bottom: 1px solid var(--panel-border);
+    background: var(--dusty-rose); font-size: 11px; font-weight: 600;
+    color: var(--blackish); position: sticky; top: 0; z-index: 2; min-width: 1000px;
+  }
+  .entry-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 16px; border-bottom: 1px solid var(--panel-border);
+    font-size: 13px; min-width: 1000px;
+  }
+  .entry-row:last-child { border-bottom: none; }
+  .entry-row:nth-child(even) { background: var(--row-alt); }
+  .entry-row:hover { background: var(--accent-soft); }
+  .entry-cell { flex: 1; min-width: 0; }
+  .entry-cell.assignee { flex: 0 0 136px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+  .entry-cell.weborder { flex: 0 0 124px; }
+  .entry-cell.dt { flex: 0 0 104px; font-variant-numeric: tabular-nums; }
+  .entry-cell.case-no { flex: 0 0 152px; }
+  .entry-cell.type { flex: 0 0 142px; }
+  .entry-cell.remarks { flex: 1.3 1 170px; }
+  .entry-cell.tag-cell { flex: 0 0 132px; }
+  .entries-head-row .entry-cell.tag-cell { flex: 0 0 132px; }
+  .entries-head-row .entry-cell.assignee { flex: 0 0 136px; }
+  .entries-head-row .entry-cell.weborder { flex: 0 0 124px; }
+  .entries-head-row .entry-cell.dt { flex: 0 0 104px; }
+  .entries-head-row .entry-cell.case-no { flex: 0 0 152px; }
+  .entries-head-row .entry-cell.type { flex: 0 0 142px; }
+
+  .stale-dot {
+    flex: 0 0 7px; width: 7px; height: 7px; border-radius: 50%;
+    background: #C1554A; animation: staleDotPulse 2s var(--ease) infinite;
+  }
+  @keyframes staleDotPulse {
+    0% { box-shadow: 0 0 0 0 rgba(193, 85, 74, 0.45); }
+    70% { box-shadow: 0 0 0 6px rgba(193, 85, 74, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(193, 85, 74, 0); }
+  }
+
+  .remarks-input {
+    width: 100%; border: none; border-bottom: 1px solid rgba(184,146,106,.55);
+    background: transparent; padding: 2px 0; font-size: 13px; line-height: 1.4;
+    color: var(--text); outline: none; resize: none; min-height: 22px; overflow: hidden;
+  }
+  .remarks-input::placeholder { color: var(--text-faint); }
+  .remarks-input:focus { border-bottom-color: var(--wheat); }
+
+  .status-select {
+    appearance: none; -webkit-appearance: none;
+    width: 100%; border: none; border-radius: 20px;
+    padding: 5px 24px 5px 11px; font-size: 11.5px; font-weight: 600;
+    cursor: pointer; outline: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='9' height='6'><path d='M0 0 L4.5 6 L9 0 Z' fill='%232D2D2B' fill-opacity='0.55'/></svg>");
+    background-repeat: no-repeat; background-position: right 8px center;
+  }
+  .status-select:focus-visible { outline: 2px solid var(--wheat); outline-offset: 2px; }
+  .status-inprogress { background-color: rgba(184, 146, 106, 0.25); color: var(--blackish); }
+  .status-posted { background-color: var(--sage); color: var(--blackish); }
+
+  /* ---------- Toast ---------- */
+  .toast {
+    position: fixed; left: 50%; bottom: 26px; transform: translate(-50%, 12px);
+    background: var(--blackish); color: #F6F2EA; font-size: 13px; font-weight: 600;
+    padding: 11px 18px; border-radius: 8px; box-shadow: 0 12px 30px rgba(45,45,43,.28);
+    opacity: 0; pointer-events: none; z-index: 90;
+    transition: opacity .18s var(--ease), transform .18s var(--ease);
+    max-width: calc(100vw - 32px); text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (max-width: 720px) {
+    main { padding: 22px 18px 40px; }
+    header { padding: 70px 18px 20px; }
+    .back-btn { left: 18px; top: 18px; }
+    h1 { font-size: 19px; }
+    .entries-toolbar-left { width: 100%; }
+    .search-wrap { flex: 1 1 100%; }
+    .stats-strip { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 420px) {
+    .stats-strip { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back-btn" href="home.html">&larr; Back</a>
+  <h1>FOLLOW UP</h1>
+  <div class="header-rule"></div>
+</header>
+
+<main>
+  <div class="page-wrap">
+    <div class="section-label" style="margin-bottom:8px;">Saved Entries</div>
+    <div class="status-row"><span class="status-dot"></span><span>Connected to the demo data &mdash; entries loaded.</span></div>
+
+    <div class="stats-strip">
+      <div class="stat-card">
+        <div class="stat-icon">
+          <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8.5L6.5 11.5L12.5 4.5" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value" id="statPostedToday">0</div>
+          <div class="stat-label">Posted Today</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">
+          <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6.2" stroke-width="1.4"/><path d="M8 4.5V8L10.5 9.5" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value" id="statAvgTime">&mdash;</div>
+          <div class="stat-label">Avg. Processing Time</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">
+          <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 2h8M4 14h8M5 2c0 3 1.5 4.5 3 6-1.5 1.5-3 3-3 6M11 2c0 3-1.5 4.5-3 6 1.5 1.5 3 3 3 6" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value" id="statOldestOpen">&mdash;</div>
+          <div class="stat-label">Oldest Open</div>
+        </div>
+      </div>
+      <div class="stat-card" id="statAttentionCard">
+        <div class="stat-icon">
+          <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 1.6l7 12.2H1L8 1.6z" stroke-width="1.3" stroke-linejoin="round"/><path d="M8 6.5V9.3" stroke-width="1.3" stroke-linecap="round"/><circle cx="8" cy="11.6" r="0.7" fill="currentColor" stroke="none"/></svg>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value" id="statAttentionCount">0</div>
+          <div class="stat-label">Needs Attention</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="entries-toolbar">
+      <div class="entries-toolbar-left">
+        <div class="view-tabs" role="tablist" aria-label="Follow up view">
+          <button type="button" class="view-tab active" id="tabActive" data-view="active" role="tab" aria-selected="true">
+            <span class="tab-dot"></span>In Progress<span class="tab-count" id="countActive">0</span>
+          </button>
+          <button type="button" class="view-tab" id="tabPosted" data-view="posted" role="tab" aria-selected="false">
+            <span class="tab-dot"></span>Posted<span class="tab-count" id="countPosted">0</span>
+          </button>
+        </div>
+        <div class="search-wrap">
+          <svg class="search-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5.25" stroke="currentColor" stroke-width="1.4"/><path d="M11 11L14.5 14.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          <input type="text" id="searchInput" class="search-input" placeholder="Search follow ups…" aria-label="Search follow ups">
+          <button type="button" class="search-clear-btn" id="searchClearBtn" aria-label="Clear search">&times;</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="entries-box" id="entriesBox"></div>
+  </div>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ============================================================
+   DEMO DATA — invented entries. DEMO_NOW keeps the stats stable
+   however long after the demo was built it is opened.
+   ============================================================ */
+var DEMO_NOW = new Date(2026, 10, 16, 9, 20, 0).getTime();  /* Nov 16, 2026 09:20 local */
+var DAY = 24 * 60 * 60 * 1000;
+var HOUR = 60 * 60 * 1000;
+var MIN = 60 * 1000;
+
+function t(daysAgo, hour, minute) {
+  var d = new Date(2026, 10, 16, hour, minute, 0);
+  return d.getTime() - daysAgo * DAY;
+}
+
+var ENTRIES = [
+  { assignee: 'A. Mercado',    webOrderNo: 'W26-008412', dateReceived: '2026-11-10', caseNo: 'CAS-2611042-Q7L2M', followUpType: 'DISCOUNT',       remarks: '', status: 'In Progress', createdAt: t(6, 8, 40) },
+  { assignee: 'K. Salcedo',    webOrderNo: 'W26-008418', dateReceived: '2026-11-11', caseNo: 'CAS-2611057-R3T8V', followUpType: 'AWAIT-CUST',     remarks: 'Waiting on customer size confirmation.', status: 'In Progress', createdAt: t(4, 10, 15) },
+  { assignee: 'R. Villanueva', webOrderNo: 'W26-008421', dateReceived: '2026-11-11', caseNo: 'CAS-2611061-K9B4C', followUpType: 'PRICING',        remarks: '', status: 'In Progress', createdAt: t(3, 13, 5) },
+  { assignee: 'D. Ocampo',     webOrderNo: 'W26-008433', dateReceived: '2026-11-12', caseNo: 'CAS-2611074-M2X6H', followUpType: 'REMARKS',        remarks: '', status: 'In Progress', createdAt: t(2, 9, 30) },
+  { assignee: 'M. Halili',     webOrderNo: 'W26-008440', dateReceived: '2026-11-12', caseNo: 'CAS-2611080-D8N1P', followUpType: 'CONFIGURATION',  remarks: 'Temple length differs from the original request.', status: 'In Progress', createdAt: t(2, 15, 45) },
+  { assignee: 'J. Ferrer',     webOrderNo: 'W26-008446', dateReceived: '2026-11-13', caseNo: 'CAS-2611088-T5W3J', followUpType: 'PAYMENT',        remarks: '', status: 'In Progress', createdAt: t(0, 6, 20) },
+  { assignee: 'L. Bautista',   webOrderNo: 'W26-008451', dateReceived: '2026-11-13', caseNo: 'CAS-2611093-Y4F9S', followUpType: 'ENGRAVING',      remarks: '', status: 'In Progress', createdAt: t(1, 11, 10) },
+  { assignee: 'A. Mercado',    webOrderNo: 'W26-008457', dateReceived: '2026-11-13', caseNo: 'CAS-2611099-L6H2G', followUpType: 'DISCOUNT',       remarks: 'Discount approved by the account manager.', status: 'In Progress', createdAt: t(1, 16, 0) },
+  { assignee: 'K. Salcedo',    webOrderNo: 'W26-008462', dateReceived: '2026-11-14', caseNo: 'CAS-2611104-C1Q7Z', followUpType: 'UPC',            remarks: '', status: 'In Progress', createdAt: t(0, 7, 50) },
+  { assignee: 'R. Villanueva', webOrderNo: 'W26-008469', dateReceived: '2026-11-14', caseNo: 'CAS-2611110-P3M8R', followUpType: 'SAMPLES',        remarks: '', status: 'In Progress', createdAt: t(0, 8, 35) },
+  { assignee: 'D. Ocampo',     webOrderNo: 'W26-008473', dateReceived: '2026-11-14', caseNo: 'CAS-2611115-B6N4T', followUpType: 'ID',             remarks: '', status: 'In Progress', createdAt: t(0, 8, 55) },
+  { assignee: 'M. Halili',     webOrderNo: 'W26-008478', dateReceived: '2026-11-15', caseNo: 'CAS-2611121-H2R5K', followUpType: 'CONFIGURATION',  remarks: '', status: 'In Progress', createdAt: t(0, 9, 5) },
+  { assignee: 'J. Ferrer',     webOrderNo: 'W26-008482', dateReceived: '2026-11-15', caseNo: 'CAS-2611126-W9C3D', followUpType: 'PRICING',        remarks: '', status: 'In Progress', createdAt: t(0, 9, 10) },
+  { assignee: 'L. Bautista',   webOrderNo: 'W26-008487', dateReceived: '2026-11-15', caseNo: 'CAS-2611130-Z4V7L', followUpType: 'REMARKS',        remarks: '', status: 'In Progress', createdAt: t(0, 9, 12) },
+  { assignee: 'A. Mercado',    webOrderNo: 'W26-008491', dateReceived: '2026-11-16', caseNo: 'CAS-2611134-F8P1S', followUpType: 'AWAIT-CUST',     remarks: '', status: 'In Progress', createdAt: t(0, 9, 15) },
+  { assignee: 'K. Salcedo',    webOrderNo: 'W26-008495', dateReceived: '2026-11-16', caseNo: 'CAS-2611138-J5G6Q', followUpType: 'PAYMENT',        remarks: '', status: 'In Progress', createdAt: t(0, 9, 18) },
+
+  { assignee: 'R. Villanueva', webOrderNo: 'W26-008402', dateReceived: '2026-11-07', caseNo: 'CAS-2611008-N2C4M', followUpType: 'REMARKS',        remarks: 'Posted after the customer replied.', status: 'Posted', createdAt: t(9, 9, 0), ptimeOverride: '3d 04:12:00', postedAt: t(2, 11, 0) },
+  { assignee: 'D. Ocampo',     webOrderNo: 'W26-008407', dateReceived: '2026-11-08', caseNo: 'CAS-2611015-T7R2B', followUpType: 'DISCOUNT',       remarks: '', status: 'Posted', createdAt: t(8, 10, 30), ptimeOverride: '2d 07:45:00', postedAt: t(3, 14, 20) },
+  { assignee: 'M. Halili',     webOrderNo: 'W26-008414', dateReceived: '2026-11-09', caseNo: 'CAS-2611021-V3K9D', followUpType: 'CONFIGURATION',  remarks: '', status: 'Posted', createdAt: t(7, 8, 15), ptimeOverride: '1d 11:20:00', postedAt: t(4, 9, 45) },
+  { assignee: 'J. Ferrer',     webOrderNo: 'W26-008426', dateReceived: '2026-11-10', caseNo: 'CAS-2611033-H6Q1S', followUpType: 'ENGRAVING',      remarks: 'Engraving proof approved.', status: 'Posted', createdAt: t(6, 13, 40), ptimeOverride: '4d 02:05:00', postedAt: t(5, 10, 10) },
+  { assignee: 'L. Bautista',   webOrderNo: 'W26-008431', dateReceived: '2026-11-11', caseNo: 'CAS-2611046-M8L5C', followUpType: 'PRICING',        remarks: '', status: 'Posted', createdAt: t(5, 9, 25), ptimeOverride: '2d 18:30:00', postedAt: t(2, 16, 35) },
+  { assignee: 'A. Mercado',    webOrderNo: 'W26-008444', dateReceived: '2026-11-13', caseNo: 'CAS-2611085-B1T7N', followUpType: 'SAMPLES',        remarks: '', status: 'Posted', createdAt: t(2, 10, 5), ptimeOverride: '00:12:40', postedAt: t(0, 8, 5) },
+  { assignee: 'K. Salcedo',    webOrderNo: 'W26-008449', dateReceived: '2026-11-13', caseNo: 'CAS-2611091-S4D2J', followUpType: 'UPC',            remarks: 'Certificate numbers attached.', status: 'Posted', createdAt: t(2, 14, 0), ptimeOverride: '1d 22:15:00', postedAt: t(0, 8, 50) }
+];
+
+var STALE_MS = DAY;
+
+/* ---------- helpers ---------- */
+function escapeHtml(str) {
+  return String(str == null ? '' : str).replace(/[&<>"']/g, function (c) {
+    return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+  });
+}
+function parseDurationText(text) {
+  if (!text) return 0;
+  var s = String(text).trim();
+  var days = 0;
+  var m = s.match(/^(\d+)\s*d\s+(.*)$/i);
+  if (m) { days = Number(m[1]) || 0; s = m[2]; }
+  var p = s.split(':').map(function (x) { return Number(x) || 0; });
+  var h = 0, mi = 0, sec = 0;
+  if (p.length >= 3) { h = p[0]; mi = p[1]; sec = p[2]; }
+  else if (p.length === 2) { mi = p[0]; sec = p[1]; }
+  else if (p.length === 1) { sec = p[0]; }
+  return (days * 86400 + h * 3600 + mi * 60 + sec) * 1000;
+}
+function formatShortDuration(ms) {
+  if (!ms || ms < 0) ms = 0;
+  var totalMin = Math.floor(ms / 60000);
+  var days = Math.floor(totalMin / 1440);
+  var hours = Math.floor((totalMin % 1440) / 60);
+  var mins = totalMin % 60;
+  if (days > 0) return days + 'd ' + hours + 'h';
+  if (hours > 0) return hours + 'h ' + mins + 'm';
+  return mins + 'm';
+}
+function processingMs(e) {
+  return e.ptimeOverride ? parseDurationText(e.ptimeOverride) : Math.max(0, (e.postedAt || DEMO_NOW) - e.createdAt);
+}
+function isPosted(e) { return e.status === 'Posted'; }
+function isStale(e) {
+  if (isPosted(e) || !e.createdAt) return false;
+  return (DEMO_NOW - e.createdAt) > STALE_MS;
+}
+function isSameDay(ts, ref) {
+  var a = new Date(ts), b = new Date(ref);
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
+function postedTodayCount() {
+  return ENTRIES.filter(function (e) { return isPosted(e) && e.postedAt && isSameDay(e.postedAt, DEMO_NOW); }).length;
+}
+
+/* ---------- toast ---------- */
+var toastEl = document.getElementById('toast');
+var toastTimer = null;
+function showToast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 2100);
+}
+var SAVED_TOAST = "Demo mode \u2014 changes aren't saved";
+
+/* ---------- state ---------- */
+var currentView = 'active';
+var searchQuery = '';
+
+var entriesBox = document.getElementById('entriesBox');
+var searchInput = document.getElementById('searchInput');
+var searchClearBtn = document.getElementById('searchClearBtn');
+var tabActive = document.getElementById('tabActive');
+var tabPosted = document.getElementById('tabPosted');
+
+function updateStats() {
+  document.getElementById('statPostedToday').textContent = String(postedTodayCount());
+
+  var posted = ENTRIES.filter(isPosted);
+  var avgEl = document.getElementById('statAvgTime');
+  if (posted.length) {
+    var avg = posted.reduce(function (sum, e) { return sum + processingMs(e); }, 0) / posted.length;
+    avgEl.textContent = formatShortDuration(avg);
+  } else {
+    avgEl.textContent = '\u2014';
+  }
+
+  var open = ENTRIES.filter(function (e) { return !isPosted(e) && e.createdAt; });
+  var oldestEl = document.getElementById('statOldestOpen');
+  if (open.length) {
+    var oldest = open.reduce(function (a, b) { return a.createdAt < b.createdAt ? a : b; });
+    oldestEl.textContent = formatShortDuration(DEMO_NOW - oldest.createdAt);
+  } else {
+    oldestEl.textContent = 'All caught up';
+  }
+
+  var staleCount = ENTRIES.filter(isStale).length;
+  document.getElementById('statAttentionCount').textContent = String(staleCount);
+  document.getElementById('statAttentionCard').classList.toggle('has-issues', staleCount > 0);
+}
+
+function updateTabCounts() {
+  var posted = ENTRIES.filter(isPosted).length;
+  document.getElementById('countActive').textContent = ENTRIES.length - posted;
+  document.getElementById('countPosted').textContent = posted;
+}
+
+function matchesSearch(e, q) {
+  if (!q) return true;
+  return [e.assignee, e.webOrderNo, e.dateReceived, e.caseNo, e.followUpType, e.remarks, e.status]
+    .filter(Boolean).join(' ').toLowerCase().indexOf(q) !== -1;
+}
+
+function visibleIndexes() {
+  var rows = ENTRIES.map(function (e, i) { return { e: e, i: i }; })
+    .filter(function (r) { return currentView === 'posted' ? isPosted(r.e) : !isPosted(r.e); })
+    .filter(function (r) { return matchesSearch(r.e, searchQuery); });
+  if (currentView === 'posted') {
+    rows.sort(function (a, b) { return (b.e.postedAt || 0) - (a.e.postedAt || 0); });
+  }
+  return rows.map(function (r) { return r.i; });
+}
+
+function statusOptionsHTML(current) {
+  return ['In Progress', 'Posted'].map(function (o) {
+    return '<option value="' + o + '"' + (o === current ? ' selected' : '') + '>' + o + '</option>';
+  }).join('');
+}
+
+function render() {
+  updateStats();
+  updateTabCounts();
+
+  var indexes = visibleIndexes();
+  if (!indexes.length) {
+    var msg = searchQuery ? 'No follow ups match your search.'
+      : (currentView === 'posted' ? 'No posted follow ups yet.' : 'Nothing in progress \u2014 check the Posted tab.');
+    entriesBox.innerHTML = '<div class="entries-empty">' + msg + '</div>';
+    return;
+  }
+
+  var html = '<div class="entries-head-row">' +
+    '<div class="entry-cell assignee">Assignee</div>' +
+    '<div class="entry-cell weborder">Web Order No.</div>' +
+    '<div class="entry-cell dt">Date Received</div>' +
+    '<div class="entry-cell case-no">Case No.</div>' +
+    '<div class="entry-cell type">Follow Up Type</div>' +
+    '<div class="entry-cell remarks">Remarks</div>' +
+    '<div class="entry-cell tag-cell">Status</div>' +
+  '</div>';
+
+  indexes.forEach(function (idx) {
+    var e = ENTRIES[idx];
+    var pill = isPosted(e) ? 'status-posted' : 'status-inprogress';
+    html += '<div class="entry-row" data-idx="' + idx + '">' +
+      '<div class="entry-cell assignee">' +
+        (isStale(e) ? '<span class="stale-dot" title="Open for ' + escapeHtml(formatShortDuration(DEMO_NOW - e.createdAt)) + '"></span>' : '') +
+        '<span class="pii">' + escapeHtml(e.assignee || '\u2014') + '</span>' +
+      '</div>' +
+      '<div class="entry-cell weborder"><span class="pii">' + escapeHtml(e.webOrderNo || '\u2014') + '</span></div>' +
+      '<div class="entry-cell dt">' + escapeHtml(e.dateReceived) + '</div>' +
+      '<div class="entry-cell case-no"><span class="pii">' + escapeHtml(e.caseNo || '\u2014') + '</span></div>' +
+      '<div class="entry-cell type">' + escapeHtml(e.followUpType || '\u2014') + '</div>' +
+      '<div class="entry-cell remarks">' +
+        '<textarea class="remarks-input" rows="1" data-idx="' + idx + '" placeholder="Add remarks\u2026" aria-label="Remarks">' + escapeHtml(e.remarks || '') + '</textarea>' +
+      '</div>' +
+      '<div class="entry-cell tag-cell">' +
+        '<select class="status-select ' + pill + '" data-idx="' + idx + '" aria-label="Status">' + statusOptionsHTML(e.status) + '</select>' +
+      '</div>' +
+    '</div>';
+  });
+
+  entriesBox.innerHTML = html;
+
+  Array.prototype.forEach.call(entriesBox.querySelectorAll('.remarks-input'), function (el) {
+    el.style.height = '22px';
+    el.style.height = Math.max(22, el.scrollHeight) + 'px';
+    el.addEventListener('input', function () {
+      ENTRIES[Number(el.dataset.idx)].remarks = el.value;
+      el.style.height = '22px';
+      el.style.height = Math.max(22, el.scrollHeight) + 'px';
+      clearTimeout(el._saveTimer);
+      el._saveTimer = setTimeout(function () { showToast(SAVED_TOAST); }, 700);
+    });
+  });
+
+  Array.prototype.forEach.call(entriesBox.querySelectorAll('.status-select'), function (sel) {
+    sel.addEventListener('change', function () {
+      var idx = Number(sel.dataset.idx);
+      var e = ENTRIES[idx];
+      e.status = sel.value;
+      if (e.status === 'Posted') {
+        e.postedAt = DEMO_NOW;
+      } else {
+        e.postedAt = null;
+      }
+      showToast(SAVED_TOAST);
+      render();
+    });
+  });
+}
+
+/* ---------- tabs ---------- */
+function setView(view) {
+  currentView = view;
+  tabActive.classList.toggle('active', view === 'active');
+  tabActive.setAttribute('aria-selected', String(view === 'active'));
+  tabPosted.classList.toggle('active', view === 'posted');
+  tabPosted.setAttribute('aria-selected', String(view === 'posted'));
+  render();
+}
+tabActive.addEventListener('click', function () { setView('active'); });
+tabPosted.addEventListener('click', function () { setView('posted'); });
+
+/* ---------- search ---------- */
+searchInput.addEventListener('input', function () {
+  searchQuery = searchInput.value.trim().toLowerCase();
+  searchClearBtn.classList.toggle('show', searchQuery.length > 0);
+  if (searchQuery && visibleIndexes().length === 0) {
+    var other = currentView === 'posted' ? 'active' : 'posted';
+    var otherHasMatch = ENTRIES.some(function (e) {
+      var inOther = other === 'posted' ? isPosted(e) : !isPosted(e);
+      return inOther && matchesSearch(e, searchQuery);
+    });
+    if (otherHasMatch) {
+      currentView = other;
+      tabActive.classList.toggle('active', other === 'active');
+      tabActive.setAttribute('aria-selected', String(other === 'active'));
+      tabPosted.classList.toggle('active', other === 'posted');
+      tabPosted.setAttribute('aria-selected', String(other === 'posted'));
+    }
+  }
+  render();
+});
+searchClearBtn.addEventListener('click', function () {
+  searchInput.value = '';
+  searchQuery = '';
+  searchClearBtn.classList.remove('show');
+  searchInput.focus();
+  render();
+});
+
+render();
+</script>
+</body>
+</html>

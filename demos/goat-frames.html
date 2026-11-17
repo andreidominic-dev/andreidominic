@@ -1,0 +1,2112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Special Edition &mdash; GOAT Frames | Backoffice</title>
+<style>
+  /* A few things Tailwind utilities can't express cleanly on their own. */
+  .tint-wheat   { background: rgba(184, 146, 106, 0.14); }
+  .tint-caution { background: rgba(192, 138, 62, 0.12); }
+  .tint-urgent  { background: rgba(184, 92, 74, 0.10); }
+
+  /* ============================================================
+     Order Requests — styling adopted from Manual Typing (entry
+     line, search pill, process-time switch, status pills, hold /
+     delete buttons, double-click-to-edit cells), restyled onto
+     this page's own Caramel Coated palette.
+     ============================================================ */
+
+  /* ---------- One-line Add Entry form ---------- */
+  .entry-line {
+    display: flex;
+    align-items: flex-end;
+    flex-wrap: nowrap;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: #B0B0B0 transparent;
+  }
+  .entry-line::-webkit-scrollbar { height: 6px; }
+  .entry-line::-webkit-scrollbar-track { background: transparent; }
+  .entry-line::-webkit-scrollbar-thumb { background: #B0B0B0; border-radius: 4px; }
+  .entry-line::-webkit-scrollbar-thumb:hover { background: #B8926A; }
+
+  /* Thin hairline between logical field clusters (dates / identifiers
+     / market+country / qty+remarks) so the compact row reads as
+     organized groups instead of one undifferentiated strip. */
+  .entry-divider { width: 1px; align-self: stretch; margin: 2px 3px 6px; background: #E4DFD8; flex-shrink: 0; }
+
+  .field-input {
+    border: 1px solid #C7C2BA;
+    background: #FCFBF9;
+    border-radius: 6px;
+    padding: 6px 9px;
+    font: inherit;
+    font-size: 12.5px;
+    color: #2D2D2B;
+    outline: none;
+    box-shadow: inset 0 1px 1px rgba(45, 45, 43, 0.03);
+    transition: border-color 0.15s cubic-bezier(0.2, 0.7, 0.3, 1), box-shadow 0.15s cubic-bezier(0.2, 0.7, 0.3, 1), background 0.15s cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  .field-input:hover { border-color: #B8926A; }
+  .field-input::placeholder { color: #ADA391; }
+  .field-input:focus { background: #FFFFFF; border-color: #B8926A; box-shadow: 0 0 0 3px rgba(184, 146, 106, 0.16); }
+  .field-input:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  .commit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    background: #2D2D2B;
+    color: #FFFFFF;
+    border: 1px solid #2D2D2B;
+    border-radius: 6px;
+    padding: 7px 16px;
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(45, 45, 43, 0.18), 0 3px 8px rgba(45, 45, 43, 0.1);
+    transition: background 0.15s cubic-bezier(0.2, 0.7, 0.3, 1), border-color 0.15s cubic-bezier(0.2, 0.7, 0.3, 1), box-shadow 0.15s cubic-bezier(0.2, 0.7, 0.3, 1), transform 0.15s cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  .commit-btn svg { transition: transform 0.2s cubic-bezier(0.2, 0.7, 0.3, 1); }
+  .commit-btn:hover { background: #92714F; border-color: #92714F; box-shadow: 0 2px 5px rgba(146, 113, 79, 0.3), 0 5px 14px rgba(146, 113, 79, 0.22); transform: translateY(-1px); }
+  .commit-btn:hover svg { transform: rotate(90deg); }
+  .commit-btn:active { transform: translateY(0); box-shadow: 0 1px 2px rgba(45, 45, 43, 0.2); }
+  .commit-btn:focus-visible { outline: 2px solid #B8926A; outline-offset: 2px; }
+
+  /* ---------- Search field (pill) ---------- */
+  .search-field { position: relative; flex: 1; max-width: 320px; }
+  .search-field svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: #8B8B87; pointer-events: none; }
+  .search-field input {
+    width: 100%;
+    border: 1px solid #B0B0B0;
+    background: #FFFFFF;
+    border-radius: 20px;
+    padding: 9px 14px 9px 34px;
+    font: inherit;
+    font-size: 13px;
+    color: #2D2D2B;
+    outline: none;
+    transition: border-color 0.15s cubic-bezier(0.2, 0.7, 0.3, 1), box-shadow 0.15s cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  .search-field input:focus { border-color: #B8926A; box-shadow: 0 0 0 3px rgba(184, 146, 106, 0.14); }
+  .result-count { font-size: 12px; color: #8B8B87; white-space: nowrap; }
+
+  /* ---------- Show Processing Time switch (icon + track + thumb) ---------- */
+  .ptime-switch {
+    display: inline-flex; align-items: center; gap: 9px;
+    background: #FFFFFF; border: 1px solid #B0B0B0; border-radius: 24px;
+    padding: 5px 14px 5px 6px; cursor: pointer; font: inherit; color: #8B8B87;
+    transition: border-color 0.2s cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  .ptime-switch:hover { border-color: #B8926A; }
+  .ptime-switch-icon { display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; flex-shrink: 0; }
+  .ptime-switch-icon svg { width: 15px; height: 15px; }
+  .ptime-switch-icon svg circle, .ptime-switch-icon svg path { stroke: #8B8B87; transition: stroke 0.2s cubic-bezier(0.2, 0.7, 0.3, 1); }
+  .ptime-switch-icon .clock-hand { transform-origin: 8px 8px; }
+  .ptime-switch-track { position: relative; width: 34px; height: 19px; border-radius: 10px; background: #B0B0B0; flex-shrink: 0; transition: background 0.25s cubic-bezier(0.2, 0.7, 0.3, 1); }
+  .ptime-switch-thumb { position: absolute; top: 2px; left: 2px; width: 15px; height: 15px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(45,45,43,0.35); transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.3, 1); }
+  .ptime-switch-label { font-size: 12.5px; font-weight: 600; color: #8B8B87; white-space: nowrap; transition: color 0.2s cubic-bezier(0.2, 0.7, 0.3, 1); }
+  .ptime-switch.on { border-color: #B8926A; }
+  .ptime-switch.on .ptime-switch-track { background: #B8926A; }
+  .ptime-switch.on .ptime-switch-thumb { transform: translateX(15px); }
+  .ptime-switch.on .ptime-switch-label { color: #2D2D2B; }
+  .ptime-switch.on .ptime-switch-icon svg circle, .ptime-switch.on .ptime-switch-icon svg path { stroke: #B8926A; }
+  .ptime-switch.on .ptime-switch-icon .clock-hand { animation: clockTick 2.2s linear infinite; }
+  @keyframes clockTick { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+  /* ---------- Table rows ---------- */
+  /* ---------- Order Requests table (styled after the Follow Up page) ---------- */
+  .entries-box {
+    border: 1px solid #B0B0B0;
+    border-radius: 8px;
+    overflow: auto;
+    max-height: 460px;
+    box-shadow: 0 1px 2px rgba(45, 45, 43, 0.05), 0 4px 14px rgba(45, 45, 43, 0.05);
+  }
+  /* Fixed layout: every column keeps the width its <col> gives it,
+     regardless of what gets typed into an editable cell — long text
+     truncates with an ellipsis (title attribute carries the full
+     value) instead of stretching the table or breaking the grid. */
+  .order-table { table-layout: fixed; }
+  .order-table td, .order-table th {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .order-table td.cell-remarks, .order-table th.col-remarks { white-space: nowrap; }
+
+  /* ---------- Allocation warning ---------- */
+  .alloc-warning {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(161, 76, 76, 0.1); border: 1px solid rgba(161, 76, 76, 0.35);
+    color: #A14C4C; border-radius: 6px; padding: 8px 12px;
+    font-size: 12px; line-height: 1.4; font-weight: 600;
+  }
+  /* "Limit reached" pill — used in the order table (next to Market,
+     only when an entry actually pushes a country/market past its cap)
+     and in the allocation dashboard (next to a market or country name,
+     once usage is at or over its cap). */
+  .limit-badge {
+    display: inline-flex; align-items: center;
+    background: rgba(161, 76, 76, 0.12);
+    color: #A14C4C;
+    font-size: 10.5px; font-weight: 700;
+    padding: 2px 9px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  /* Tallies queued-up demand (Waiting List entries) separately from
+     the "Limit reached" badge above — same color family since both
+     relate to the Waiting List status, but lighter so the two never
+     get confused for one another. */
+  .waitlist-badge {
+    display: inline-flex; align-items: center; gap: 3px;
+    background: rgba(161, 76, 76, 0.08);
+    color: #A14C4C;
+    font-size: 10px; font-weight: 700;
+    padding: 1px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  /* Only a genuinely new row animates in — every other row simply
+     re-renders in place. Previously every row replayed this on any
+     change anywhere in the table (e.g. clicking Hold on one entry
+     made the whole table look like it had just reloaded). */
+  .order-panel tbody tr.row-enter { animation: rowIn 0.25s cubic-bezier(0.2, 0.7, 0.3, 1) both; }
+  .order-panel tbody tr:nth-child(even) { background: rgba(212, 200, 190, 0.32); }
+  .order-panel tbody tr:hover { background: rgba(184, 146, 106, 0.14); }
+  @keyframes rowIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ---------- View tabs (segmented pill, adopted from Follow Up) ---------- */
+  .view-tabs {
+    display: inline-flex; align-items: center; gap: 3px;
+    background: rgba(176, 176, 176, 0.16); border: 1px solid #B0B0B0;
+    border-radius: 24px; padding: 3px;
+  }
+  .view-tab {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: transparent; border: none; color: #8B8B87;
+    font: inherit; font-size: 12.5px; font-weight: 600; letter-spacing: 0.02em;
+    padding: 7px 14px; border-radius: 20px; cursor: pointer;
+    transition: background 0.2s cubic-bezier(0.2, 0.7, 0.3, 1), color 0.2s cubic-bezier(0.2, 0.7, 0.3, 1), box-shadow 0.2s cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  .view-tab:hover { color: #2D2D2B; }
+  .view-tab:focus-visible { outline: 2px solid #B8926A; outline-offset: 2px; }
+  .view-tab.active { background: #FFFFFF; color: #2D2D2B; box-shadow: 0 1px 2px rgba(45, 45, 43, 0.05), 0 4px 14px rgba(45, 45, 43, 0.05); }
+  .view-tab .tab-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .view-tab[data-tab="pending"] .tab-dot { background: #B8926A; }
+  .view-tab[data-tab="completed"] .tab-dot { background: #C3D3BC; border: 1px solid #9db496; }
+  .view-tab[data-tab="waiting"] .tab-dot { background: #A14C4C; }
+  .tab-count {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 19px; height: 19px; padding: 0 5px; border-radius: 10px;
+    background: rgba(45, 45, 43, 0.12); color: #8B8B87; font-size: 11px; font-weight: 700;
+    transition: background 0.2s cubic-bezier(0.2, 0.7, 0.3, 1), color 0.2s cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  .view-tab[data-tab="pending"].active .tab-count { background: #B8926A; color: #fff; }
+  .view-tab[data-tab="completed"].active .tab-count { background: #C3D3BC; color: #2D2D2B; }
+  .view-tab[data-tab="waiting"].active .tab-count { background: #A14C4C; color: #fff; }
+
+  /* Directly editable plain cells: text cursor + soft hover highlight,
+     same discoverability cue as Manual Typing. */
+  .editable-cell { cursor: text; padding: 3px 5px; margin: -3px -5px; border-radius: 4px; transition: background 0.15s cubic-bezier(0.2, 0.7, 0.3, 1); }
+  .editable-cell:hover { background: rgba(184, 146, 106, 0.10); }
+  .cell-edit-input {
+    width: 100%; border: none; border-bottom: 1px solid #B8926A; background: transparent;
+    padding: 2px 0; font: inherit; font-size: 13px; color: #2D2D2B; outline: none; text-align: inherit;
+  }
+  .cell-edit-textarea {
+    width: 100%; min-height: 60px; border: 1px solid #B8926A; border-radius: 4px;
+    background: #FFFFFF; padding: 5px 7px; font: inherit; font-size: 11.5px; line-height: 1.5;
+    color: #2D2D2B; outline: none; resize: vertical;
+  }
+  .bd-date { font-weight: 700; color: #2D2D2B; }
+  .bd-part { padding-left: 6px; color: #8B8B87; white-space: nowrap; }
+  .bd-empty { color: #8B8B87; }
+
+  /* Plain, always-clickable dropdowns (Market / Country) — no visible
+     border until hovered, reads as editable without looking like a form. */
+  .plain-select {
+    appearance: none; -webkit-appearance: none; border: none; background: transparent;
+    font: inherit; font-size: 13px; color: #8B8B87; cursor: pointer;
+    padding: 3px 18px 3px 4px; border-radius: 4px; width: 100%;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='9' height='6'><path d='M0 0 L4.5 6 L9 0 Z' fill='%238B8B87'/></svg>");
+    background-repeat: no-repeat; background-position: right 2px center;
+    transition: background-color 0.15s cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  .plain-select:hover { background-color: rgba(184, 146, 106, 0.10); }
+  .plain-select:focus-visible { outline: 2px solid #B8926A; outline-offset: 1px; }
+
+  /* ---------- Status pill select ---------- */
+  .status-select {
+    appearance: none; -webkit-appearance: none; border: none; border-radius: 20px;
+    padding: 4px 22px 4px 10px; font: inherit; font-size: 11px; font-weight: 600;
+    letter-spacing: 0.01em; cursor: pointer; outline: none;
+    max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='9' height='6'><path d='M0 0 L4.5 6 L9 0 Z' fill='%232D2D2B' fill-opacity='0.55'/></svg>");
+    background-repeat: no-repeat; background-position: right 7px center;
+    transition: box-shadow 0.15s cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  .status-select:hover { box-shadow: 0 0 0 2px rgba(45, 45, 43, 0.1); }
+  .status-select:focus-visible { outline: 2px solid #B8926A; outline-offset: 2px; }
+  .status-select option { background: #FFFFFF; color: #2D2D2B; }
+
+  /* ---------- Hold (pause/resume) button — sits beside Status ---------- */
+  .hold-btn {
+    flex: 0 0 auto; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
+    border-radius: 50%; border: 1px solid #B0B0B0; background: #FFFFFF; color: #8B8B87;
+    font-size: 10px; line-height: 1; cursor: pointer; padding: 0;
+    transition: border-color 0.15s cubic-bezier(0.2, 0.7, 0.3, 1), color 0.15s cubic-bezier(0.2, 0.7, 0.3, 1), background 0.15s cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  .hold-btn:hover:not(:disabled) { border-color: #B8926A; color: #2D2D2B; }
+  .hold-btn:focus-visible { outline: 2px solid #B8926A; outline-offset: 2px; }
+  .hold-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .hold-btn.is-held { background: #D4C8BE; border-color: #D4C8BE; color: #2D2D2B; }
+
+  /* ---------- Cross-out (cancel without deleting) — Waiting List only ---------- */
+  .cross-btn.is-crossed { background: #A14C4C; border-color: #A14C4C; color: #FFFFFF; }
+  .order-panel tbody tr.is-cancelled { opacity: 0.5; }
+  .order-panel tbody tr.is-cancelled td { text-decoration: line-through; }
+
+  /* ---------- Delete button ---------- */
+  .entry-delete-btn {
+    display: flex; align-items: center; justify-content: center; width: 26px; height: 26px;
+    background: transparent; border: none; color: #8B8B87; font-size: 16px; cursor: pointer;
+    font-family: inherit; border-radius: 4px;
+    transition: background 0.15s cubic-bezier(0.2, 0.7, 0.3, 1), color 0.15s cubic-bezier(0.2, 0.7, 0.3, 1), transform 0.15s cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  .entry-delete-btn:hover { color: #2D2D2B; background: #D4C8BE; transform: scale(1.08); }
+  .entry-delete-btn:focus-visible { outline: 2px solid #B8926A; outline-offset: 2px; }
+  .entry-delete-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .entry-delete-btn:disabled:hover { background: transparent; transform: none; }
+  .plain-select:disabled, .status-select:disabled { opacity: 0.6; cursor: not-allowed; }
+  .plain-select:disabled:hover { background-color: transparent; }
+
+  /* Country breakdown opens as a floating card over the page instead
+     of stretching the market card's height — so expanding one never
+     shoves the sections below it (the Order Requests tabs) down. */
+  .country-panel {
+    top: calc(100% + 8px);
+    opacity: 0;
+    transform: translateY(-4px);
+    pointer-events: none;
+    transition: opacity 0.15s cubic-bezier(0.2, 0.7, 0.3, 1), transform 0.15s cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  .country-panel.is-open { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+  .chevron { transition: transform 0.2s cubic-bezier(0.2, 0.7, 0.3, 1); }
+  .chevron.is-open { transform: rotate(180deg); }
+
+  .focus-ring:focus-visible { outline: 2px solid #B8926A; outline-offset: 2px; }
+
+  /* ---------- Delete confirmation modal ---------- */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(45, 45, 43, 0.42);
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+    z-index: 50; opacity: 0; pointer-events: none;
+    transition: opacity 0.18s cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  .modal-overlay.show { opacity: 1; pointer-events: auto; }
+  .modal-card {
+    background: #FFFFFF; border-radius: 10px; padding: 26px 26px 22px;
+    max-width: 380px; width: 100%; text-align: center;
+    box-shadow: 0 8px 30px rgba(45, 45, 43, 0.25);
+    transform: translateY(10px) scale(0.97); opacity: 0;
+    transition: transform 0.2s cubic-bezier(0.2, 0.7, 0.3, 1), opacity 0.2s cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  .modal-overlay.show .modal-card { transform: translateY(0) scale(1); opacity: 1; }
+  .modal-icon {
+    width: 46px; height: 46px; margin: 0 auto 14px; border-radius: 50%;
+    background: rgba(161, 76, 76, 0.12); display: flex; align-items: center; justify-content: center;
+  }
+  .modal-icon svg { width: 22px; height: 22px; }
+  .modal-icon svg path, .modal-icon svg circle { stroke: #A14C4C; }
+  .modal-title { font-size: 16px; font-weight: 700; color: #2D2D2B; margin: 0 0 8px; }
+  .modal-body { font-size: 13px; line-height: 1.5; color: #8B8B87; margin: 0 0 22px; }
+  .modal-body strong { color: #2D2D2B; font-weight: 600; }
+  .modal-actions { display: flex; gap: 10px; }
+  .modal-btn {
+    flex: 1; padding: 11px; font: inherit; font-size: 13.5px; font-weight: 600; letter-spacing: 0.02em;
+    border-radius: 5px; cursor: pointer;
+    transition: background 0.15s cubic-bezier(0.2, 0.7, 0.3, 1), border-color 0.15s cubic-bezier(0.2, 0.7, 0.3, 1), transform 0.15s cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  .modal-btn:active { transform: translateY(1px); }
+  .modal-btn:focus-visible { outline: 2px solid #B8926A; outline-offset: 2px; }
+  .modal-btn-cancel { background: transparent; color: #2D2D2B; border: 1px solid #C7C2BA; }
+  .modal-btn-cancel:hover { border-color: #B8926A; background: rgba(184, 146, 106, 0.1); }
+  .modal-btn-danger { background: #A14C4C; color: #fff; border: 1px solid #A14C4C; }
+  .modal-btn-danger:hover { background: #8A3F3F; border-color: #8A3F3F; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+<style id="demo-tailwind-subset">
+/* Tailwind utility subset, generated for this demo build (no CDN). */
+*,::before,::after{box-sizing:border-box;border-width:0;border-style:solid;border-color:#EAE6DF}
+html{line-height:1.5;-webkit-text-size-adjust:100%;font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;tab-size:4}
+body{margin:0;line-height:inherit}
+h1,h2,h3,h4,h5,h6,p,figure,blockquote,dl,dd{margin:0}
+h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}
+ul,ol{margin:0;padding:0;list-style:none}
+button,input,optgroup,select,textarea{font-family:inherit;font-size:100%;font-weight:inherit;line-height:inherit;color:inherit;margin:0;padding:0}
+button,select{text-transform:none}
+button,[type='button'],[type='reset'],[type='submit']{-webkit-appearance:button;background-color:transparent;background-image:none}
+button{cursor:pointer}
+table{text-indent:0;border-color:inherit;border-collapse:collapse;border-spacing:0}
+img,svg,video,canvas,audio,iframe,embed,object{display:block;vertical-align:middle}
+img,video{max-width:100%;height:auto}
+[hidden]{display:none}
+.flex{display:flex}
+.inline-flex{display:inline-flex}
+.grid{display:grid}
+.contents{display:contents}
+.hidden{display:none}
+.block{display:block}
+.relative{position:relative}
+.absolute{position:absolute}
+.sticky{position:sticky}
+.top-0{top:0}
+.left-0{left:0}
+.right-0{right:0}
+.flex-1{flex:1 1 0%}
+.flex-col{flex-direction:column}
+.flex-wrap{flex-wrap:wrap}
+.shrink-0{flex-shrink:0}
+.items-baseline{align-items:baseline}
+.items-center{align-items:center}
+.items-stretch{align-items:stretch}
+.justify-between{justify-content:space-between}
+.justify-center{justify-content:center}
+.w-full{width:100%}
+.h-full{height:100%}
+.min-w-0{min-width:0px}
+.min-h-screen{min-height:100vh}
+.max-h-80{max-height:20rem}
+.max-w-\[1680px\]{max-width:1680px}
+.mx-auto{margin-left:auto;margin-right:auto}
+.overflow-hidden{overflow:hidden}
+.overflow-y-auto{overflow-y:auto}
+.z-10{z-index:10}
+.z-30{z-index:30}
+.rounded-md{border-radius:0.375rem}
+.rounded-lg{border-radius:0.5rem}
+.rounded-full{border-radius:9999px}
+.rounded-\[10px\]{border-radius:10px}
+.border{border-width:1px}
+.border-b{border-bottom-width:1px}
+.border-wind{border-color:#B0B0B0}
+.border-breath{border-color:#EAE6DF}
+.bg-white{background-color:#FFFFFF}
+.bg-breath{background-color:#EAE6DF}
+.bg-dusty-rose{background-color:#D4C8BE}
+.bg-wheat{background-color:#B8926A}
+.bg-transparent{background-color:transparent}
+.bg-\[rgba\(184\,146\,106\,0\.12\)\]{background-color:rgba(184,146,106,0.12)}
+.shadow-lg{box-shadow:0 10px 15px -3px rgba(0,0,0,0.1),0 4px 6px -4px rgba(0,0,0,0.1)}
+.text-blackish{color:#2D2D2B}
+.text-dim{color:#8B8B87}
+.text-faint{color:#ADA391}
+.text-urgent{color:#A14C4C}
+.text-wheat-deep{color:#92714F}
+.text-white{color:#FFFFFF}
+.text-center{text-align:center}
+.text-left{text-align:left}
+.text-right{text-align:right}
+.font-sans{font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif}
+.font-bold{font-weight:700}
+.font-semibold{font-weight:600}
+.font-normal{font-weight:400}
+.uppercase{text-transform:uppercase}
+.normal-case{text-transform:none}
+.italic{font-style:italic}
+.tabular-nums{font-variant-numeric:tabular-nums}
+.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.whitespace-nowrap{white-space:nowrap}
+.no-underline{text-decoration-line:none}
+.leading-none{line-height:1}
+.leading-tight{line-height:1.25}
+.tracking-wide{letter-spacing:0.025em}
+.transition-colors{transition-property:color,background-color,border-color,text-decoration-color,fill,stroke;transition-timing-function:cubic-bezier(0.4,0,0.2,1);transition-duration:150ms}
+.transition-shadow{transition-property:box-shadow;transition-timing-function:cubic-bezier(0.4,0,0.2,1);transition-duration:150ms}
+.transition-\[width\]{transition-property:width;transition-timing-function:cubic-bezier(0.4,0,0.2,1);transition-duration:150ms}
+.duration-150{transition-duration:150ms}
+.duration-300{transition-duration:300ms}
+.grid-cols-1{grid-template-columns:repeat(1,minmax(0,1fr))}
+.grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.col-span-1{grid-column:span 1/span 1}
+.col-span-2{grid-column:span 2/span 2}
+.col-span-3{grid-column:span 3/span 3}
+.tracking-\[0\.08em\]{letter-spacing:0.08em}
+.tracking-\[0\.1em\]{letter-spacing:0.1em}
+.tracking-\[0\.14em\]{letter-spacing:0.14em}
+.tracking-\[0\.3em\]{letter-spacing:0.3em}
+.indent-\[0\.3em\]{text-indent:0.3em}
+.p-3{padding:12px}
+.p-3\.5{padding:14px}
+.pl-4{padding-left:16px}
+.pr-1{padding-right:4px}
+.pr-2{padding-right:8px}
+.pr-4{padding-right:16px}
+.pt-2\.5{padding-top:10px}
+.pb-2{padding-bottom:8px}
+.pb-2\.5{padding-bottom:10px}
+.px-2{padding-left:8px;padding-right:8px}
+.px-2\.5{padding-left:10px;padding-right:10px}
+.px-3{padding-left:12px;padding-right:12px}
+.px-3\.5{padding-left:14px;padding-right:14px}
+.px-4{padding-left:16px;padding-right:16px}
+.px-6{padding-left:24px;padding-right:24px}
+.px-8{padding-left:32px;padding-right:32px}
+.py-0\.5{padding-top:2px;padding-bottom:2px}
+.py-1{padding-top:4px;padding-bottom:4px}
+.py-1\.5{padding-top:6px;padding-bottom:6px}
+.py-2{padding-top:8px;padding-bottom:8px}
+.py-2\.5{padding-top:10px;padding-bottom:10px}
+.py-3{padding-top:12px;padding-bottom:12px}
+.py-3\.5{padding-top:14px;padding-bottom:14px}
+.py-12{padding-top:48px;padding-bottom:48px}
+.m-0{margin:0}
+.mb-1{margin-bottom:4px}
+.mb-1\.5{margin-bottom:6px}
+.mb-2{margin-bottom:8px}
+.mb-2\.5{margin-bottom:10px}
+.mt-0\.5{margin-top:2px}
+.mt-1{margin-top:4px}
+.mt-1\.5{margin-top:6px}
+.gap-1{gap:4px}
+.gap-1\.5{gap:6px}
+.gap-2{gap:8px}
+.gap-2\.5{gap:10px}
+.gap-3{gap:12px}
+.gap-4{gap:16px}
+.gap-x-4{column-gap:16px}
+.gap-y-2\.5{row-gap:10px}
+.w-1\.5{width:6px}
+.w-2\.5{width:10px}
+.w-3{width:12px}
+.w-3\.5{width:14px}
+.w-4{width:16px}
+.w-6{width:24px}
+.w-9{width:36px}
+.h-1\.5{height:6px}
+.h-2\.5{height:10px}
+.h-3{height:12px}
+.h-3\.5{height:14px}
+.h-4{height:16px}
+.h-6{height:24px}
+.h-9{height:36px}
+.h-\[5px\]{height:5px}
+.h-\[6px\]{height:6px}
+.h-\[7px\]{height:7px}
+.text-\[9\.5px\]{font-size:9.5px}
+.text-\[10px\]{font-size:10px}
+.text-\[10\.5px\]{font-size:10.5px}
+.text-\[11px\]{font-size:11px}
+.text-\[11\.5px\]{font-size:11.5px}
+.text-\[12px\]{font-size:12px}
+.text-\[12\.5px\]{font-size:12.5px}
+.text-\[13px\]{font-size:13px}
+.text-\[15px\]{font-size:15px}
+.text-\[16px\]{font-size:16px}
+.text-\[18px\]{font-size:18px}
+.text-\[22px\]{font-size:22px}
+.divide-y > :not([hidden]) ~ :not([hidden]){border-top-width:1px;border-top-style:solid}
+.hover\:border-wheat:hover{border-color:#B8926A}
+.hover\:text-blackish:hover{color:#2D2D2B}
+.hover\:text-wheat-deep:hover{color:#92714F}
+.hover\:shadow-md:hover{box-shadow:0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -2px rgba(0,0,0,0.1)}
+.hover\:tint-wheat:hover{background-color:rgba(184,146,106,0.14)}
+.first\:pl-4:first-child{padding-left:1rem}
+@media (min-width:640px){
+.sm\:border-breath{border-color:#EAE6DF}
+.sm\:border-l{border-left-width:1px}
+.sm\:col-span-2{grid-column:span 2/span 2}
+.sm\:flex-row{flex-direction:row}
+.sm\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.sm\:items-center{align-items:center}
+.sm\:indent-\[0\.45em\]{text-indent:0.45em}
+.sm\:pl-4{padding-left:1rem}
+.sm\:text-\[24px\]{font-size:24px}
+.sm\:tracking-\[0\.45em\]{letter-spacing:0.45em}
+.sm\:w-\[190px\]{width:190px}
+}
+@media (min-width:1024px){
+.lg\:col-span-1{grid-column:span 1/span 1}
+.lg\:col-span-3{grid-column:span 3/span 3}
+.lg\:grid-cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+  /* ---------- Demo build ---------- */
+  .pii { filter: blur(7px); user-select: none; pointer-events: none; }
+  #demoToast {
+    position: fixed; left: 50%; bottom: 22px; transform: translate(-50%, 16px);
+    background: #2D2D2B; color: #F5F1E8; border: 1px solid rgba(184,146,106,0.55);
+    border-radius: 8px; padding: 10px 16px; font-size: 12.5px; font-weight: 600;
+    box-shadow: 0 14px 34px rgba(0,0,0,0.35); opacity: 0; pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease; z-index: 9999;
+    max-width: min(90vw, 420px); text-align: center;
+  }
+  #demoToast.show { opacity: 1; transform: translate(-50%, 0); }
+  @media (max-width: 640px) {
+    header h1 { white-space: normal !important; font-size: 15px !important; letter-spacing: 0.16em !important; text-indent: 0.16em !important; line-height: 1.35; }
+    header { padding-left: 16px; padding-right: 16px; }
+    main { padding-left: 12px; padding-right: 12px; }
+    .view-tabs { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body class="min-h-screen m-0 flex flex-col bg-breath text-blackish font-sans">
+
+  <header class="flex flex-wrap items-center gap-4 px-8 py-3.5 bg-white border-b border-wind">
+    <a href="home.html"
+       class="focus-ring inline-flex items-center gap-2 border border-wind text-dim text-[13px] tracking-wide rounded-md px-4 py-2 no-underline transition-colors duration-150 hover:border-wheat hover:text-blackish hover:tint-wheat">
+      <svg viewBox="0 0 16 16" class="w-3.5 h-3.5" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3L5 8l4.5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Back
+    </a>
+    <h1 class="text-[18px] sm:text-[24px] font-bold tracking-[0.3em] sm:tracking-[0.45em] indent-[0.3em] sm:indent-[0.45em] whitespace-nowrap m-0 text-blackish">SPECIAL EDITION &mdash; GOAT FRAMES</h1>
+  </header>
+
+  <main class="flex-1 w-full max-w-[1680px] mx-auto px-6 py-3 flex flex-col gap-3">
+
+    <!-- ===== Allocation dashboard ===== -->
+    <section aria-labelledby="allocHeading">
+      <div class="flex items-center justify-between gap-2 mb-1.5">
+        <h2 id="allocHeading" class="text-[11px] font-semibold uppercase tracking-[0.14em] text-dim m-0">
+          Model 171039 &mdash; Allocation
+        </h2>
+        <span class="text-[10px] text-faint">Updated live from Order Requests</span>
+      </div>
+
+      <!-- Total + Buffer, side by side on the same 4-column grid as the
+           market cards below, so Total Allocation (3 cols) lines up
+           flush with APAC/CC/EU and Buffer (1 col) lines up flush with
+           NAM. items-stretch keeps Buffer the same height as Total. -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mb-2 items-stretch">
+        <div class="sm:col-span-2 lg:col-span-3 bg-white border border-wind rounded-lg px-3.5 py-2.5 flex flex-col sm:flex-row sm:items-center gap-4">
+          <div class="shrink-0 sm:w-[190px]">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[9.5px] font-semibold uppercase tracking-[0.1em] text-wheat-deep">Total Allocation</span>
+              <span id="grandPctLabel" class="text-[10.5px] font-semibold text-blackish tabular-nums"></span>
+            </div>
+            <div class="flex items-baseline gap-1.5 mt-0.5">
+              <span id="grandTotalLabel" class="text-[22px] font-semibold leading-none text-blackish tabular-nums">350</span>
+              <span class="text-[10.5px] text-dim">units available</span>
+            </div>
+          </div>
+          <div class="flex-1 w-full sm:border-l sm:border-breath sm:pl-4">
+            <div class="flex items-center justify-between text-[10.5px] text-dim mb-1 tabular-nums">
+              <span id="grandUsedLabel"></span>
+              <span id="grandRemainingLabel" class="font-semibold text-wheat-deep"></span>
+            </div>
+            <!-- Segmented: base usage (wheat) then, stacked right after it,
+                 however much of that usage came from Buffer (wheat-deep) —
+                 so the composition of "used" is visible at a glance. -->
+            <div class="h-[7px] rounded-full bg-breath overflow-hidden flex">
+              <div id="grandBarBase" class="h-full bg-wheat transition-[width] duration-300" style="width: 0%;"></div>
+              <div id="grandBarBuffer" class="h-full transition-[width] duration-300" style="width: 0%; background:#4C8C52;"></div>
+            </div>
+            <div class="flex items-center justify-between gap-2 mt-1">
+              <p class="text-[10px] text-faint m-0">Live utilization across all tracked markets</p>
+              <span id="grandBufferUsedLabel" class="text-[10px] font-semibold whitespace-nowrap tabular-nums" style="color:#4C8C52;"></span>
+            </div>
+          </div>
+        </div>
+
+        <div id="bufferCard"></div>
+      </div>
+
+      <!-- Market cards — a full row of their own, so each one has room for its country breakdown.
+           items-stretch keeps every card the same height regardless of
+           whether it has a waitlisted badge — the card doesn't resize
+           when one appears, it just shows the number inline. -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 items-stretch">
+        <div id="marketCards" class="contents"></div>
+      </div>
+    </section>
+
+
+    <!-- ===== New Order Request (input) — kept separate from the saved
+         entries below, styled as a compact one-line quick-entry row
+         (adopted from Manual Typing). ===== -->
+    <section id="newOrderSection" aria-labelledby="newOrderHeading" class="bg-white border border-wind rounded-[10px] p-3 flex flex-col gap-2.5" style="box-shadow: 0 1px 2px rgba(45,45,43,0.04), 0 3px 10px rgba(45,45,43,0.04);">
+      <div class="flex items-center gap-2">
+        <div class="w-6 h-6 shrink-0 rounded-md flex items-center justify-center text-white" style="background: linear-gradient(135deg, #B8926A, #92714F); box-shadow: 0 2px 5px rgba(146,113,79,0.4), inset 0 1px 0 rgba(255,255,255,0.25);">
+          <svg viewBox="0 0 16 16" class="w-3 h-3" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 3.5v9M3.5 8h9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </div>
+        <h2 id="newOrderHeading" class="text-[13px] font-bold text-blackish m-0">New Order Request</h2>
+        <span class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-wheat-deep bg-[rgba(184,146,106,0.12)] rounded-full px-2 py-0.5">Logs as On Process</span>
+      </div>
+
+      <form id="orderForm" class="entry-line">
+        <div class="flex flex-col gap-1 shrink-0" style="width:112px;">
+          <label for="inDateReceived" class="text-[10px] font-semibold uppercase tracking-wide text-dim">Date Received</label>
+          <input type="date" id="inDateReceived" required class="field-input">
+        </div>
+        <div class="flex flex-col gap-1 shrink-0" style="width:112px;">
+          <label for="inDateProcessed" class="text-[10px] font-semibold uppercase tracking-wide text-dim">Date Processed</label>
+          <input type="date" id="inDateProcessed" class="field-input">
+        </div>
+
+        <div class="entry-divider"></div>
+
+        <div class="flex flex-col gap-1 shrink-0">
+          <label for="inCaseNo" class="text-[10px] font-semibold uppercase tracking-wide text-dim">Case No. <span class="text-faint normal-case font-normal">(25 max)</span></label>
+          <input type="text" id="inCaseNo" required maxlength="25" placeholder="e.g. CS-10234" class="field-input" style="width: 25ch;">
+        </div>
+        <div class="flex flex-col gap-1 shrink-0" style="width:260px;">
+          <label for="inSoldTo" class="text-[10px] font-semibold uppercase tracking-wide text-dim">Sold-To Account</label>
+          <input type="text" id="inSoldTo" required placeholder="Account name / no." class="field-input">
+        </div>
+
+        <div class="entry-divider"></div>
+
+        <div class="flex flex-col gap-1 shrink-0" style="width:90px;">
+          <label for="inMarket" class="text-[10px] font-semibold uppercase tracking-wide text-dim">Market</label>
+          <select id="inMarket" required class="field-input"></select>
+        </div>
+        <div class="flex flex-col gap-1 shrink-0" style="width:190px;">
+          <label for="inCountry" class="text-[10px] font-semibold uppercase tracking-wide text-dim">Country</label>
+          <input type="text" id="inCountry" list="inCountryList" autocomplete="off" placeholder="Country" class="field-input">
+          <datalist id="inCountryList"></datalist>
+        </div>
+
+        <div class="entry-divider"></div>
+
+        <div class="flex flex-col gap-1 shrink-0" style="width:66px;">
+          <label for="inQty" class="text-[10px] font-semibold uppercase tracking-wide text-dim">Quantity</label>
+          <input type="number" id="inQty" required min="1" step="1" placeholder="0" class="field-input">
+        </div>
+        <div class="flex flex-col gap-1 flex-1" style="min-width:180px;">
+          <label for="inRemarks" class="text-[10px] font-semibold uppercase tracking-wide text-dim">Remarks</label>
+          <input type="text" id="inRemarks" placeholder="Optional notes&hellip;" class="field-input">
+        </div>
+
+        <button type="submit" id="orderSubmitBtn" class="commit-btn shrink-0">
+          <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor"><path d="M8 3.5v9M3.5 8h9" stroke-width="1.6" stroke-linecap="round"/></svg>
+          Add
+        </button>
+      </form>
+      <p id="orderFormError" class="text-[12px] text-urgent m-0"></p>
+      <div id="allocationWarning" class="alloc-warning hidden">
+        <span id="allocationWarningText"></span>
+      </div>
+    </section>
+
+
+    <!-- ===== Order Requests (saved entries) ===== -->
+    <section aria-labelledby="ordersHeading" class="bg-white border border-wind rounded-[10px] p-3 flex flex-col gap-2.5">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h2 id="ordersHeading" class="text-[15px] font-bold text-blackish m-0">Order Requests</h2>
+
+        <div class="flex items-center gap-4 flex-wrap">
+          <div class="search-field">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.3"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+            <input type="text" id="orderSearchInput" placeholder="Search all columns&hellip;">
+          </div>
+          <span id="orderResultCount" class="result-count"></span>
+
+          <span id="serverStatus" class="text-[11px] text-faint whitespace-nowrap"></span>
+
+          <button type="button" id="ptimeToggleBtn" role="switch" aria-checked="false" class="ptime-switch focus-ring">
+            <span class="ptime-switch-icon">
+              <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="6.3" stroke-width="1.3"/><path class="clock-hand" d="M8 4.7V8l2.6 1.6" stroke-width="1.3" stroke-linecap="round"/></svg>
+            </span>
+            <span class="ptime-switch-track"><span class="ptime-switch-thumb"></span></span>
+            <span class="ptime-switch-label" id="ptimeSwitchLabel">Processing Time</span>
+          </button>
+
+          <input type="file" id="importFileInput" accept=".xlsx" class="hidden">
+          <button type="button" id="importBtn" title="Import order requests from an exported .xlsx file"
+            class="hidden focus-ring inline-flex items-center gap-1.5 border border-wind rounded-md px-2.5 py-1.5 text-[11.5px] font-semibold text-dim bg-transparent hover:text-blackish hover:border-wheat hover:tint-wheat transition-colors duration-150">
+            <svg viewBox="0 0 16 16" class="w-3.5 h-3.5" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 10.5V3M8 3 5.2 5.8M8 3l2.8 2.8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 11.5v1.3a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1.3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+            Import
+          </button>
+
+          <button type="button" id="exportBtn" title="Export all order requests to Excel"
+            class="hidden focus-ring inline-flex items-center gap-1.5 border border-wind rounded-md px-2.5 py-1.5 text-[11.5px] font-semibold text-dim bg-transparent hover:text-blackish hover:border-wheat hover:tint-wheat transition-colors duration-150">
+            <svg viewBox="0 0 16 16" class="w-3.5 h-3.5" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 2v7.5M8 9.5 5.2 6.7M8 9.5l2.8-2.8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 11.5v1.3a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1.3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+            Export
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabs (segmented pill, same design as the Follow Up page) -->
+      <div class="view-tabs" role="tablist" aria-label="Order request status">
+        <button type="button" class="view-tab active" data-tab="pending" id="tab-pending" role="tab" aria-selected="true" aria-controls="panel-pending">
+          <span class="tab-dot"></span>Pending Request<span class="tab-count" data-tab-count="pending">0</span>
+        </button>
+        <button type="button" class="view-tab" data-tab="completed" id="tab-completed" role="tab" aria-selected="false" aria-controls="panel-completed">
+          <span class="tab-dot"></span>Completed<span class="tab-count" data-tab-count="completed">0</span>
+        </button>
+        <button type="button" class="view-tab" data-tab="waiting" id="tab-waiting" role="tab" aria-selected="false" aria-controls="panel-waiting">
+          <span class="tab-dot"></span>Waiting List<span class="tab-count" data-tab-count="waiting">0</span>
+        </button>
+      </div>
+
+      <div id="panel-pending" role="tabpanel" aria-labelledby="tab-pending" class="order-panel"></div>
+      <div id="panel-completed" role="tabpanel" aria-labelledby="tab-completed" class="order-panel hidden"></div>
+      <div id="panel-waiting" role="tabpanel" aria-labelledby="tab-waiting" class="order-panel hidden"></div>
+    </section>
+
+  </main>
+
+  <div id="demoToast" role="status" aria-live="polite"></div>
+
+  <div class="modal-overlay" id="deleteOverlay">
+    <div class="modal-card" role="alertdialog" aria-modal="true" aria-labelledby="deleteModalTitle" aria-describedby="deleteModalBody">
+      <div class="modal-icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 8.5V13" stroke-width="1.8" stroke-linecap="round"/>
+          <circle cx="12" cy="16.2" r="0.9" fill="#A14C4C" stroke="none"/>
+          <path d="M10.6 3.6c.6-1 2.2-1 2.8 0l8 13.6c.6 1-.15 2.3-1.4 2.3H4c-1.25 0-2-1.3-1.4-2.3l8-13.6z" stroke-width="1.8" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h2 class="modal-title" id="deleteModalTitle">Delete this order request?</h2>
+      <p class="modal-body" id="deleteModalBody">This can&rsquo;t be undone once deleted.</p>
+      <div class="modal-actions">
+        <button type="button" class="modal-btn modal-btn-cancel" id="deleteCancelBtn">Cancel</button>
+        <button type="button" class="modal-btn modal-btn-danger" id="deleteConfirmBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ============================================================
+   Demo build: frozen snapshot clock, inlined read-only data,
+   in-memory only state. No network, no storage.
+   ============================================================ */
+var SNAPSHOT_NOW = 1793695791477;
+var DEMO_T0 = Date.now();
+function demoNow() { return SNAPSHOT_NOW + (Date.now() - DEMO_T0); }
+var DEMO_ORDERS = [{"id":"1789787696772-9py6a","dateReceived":"2026-09-15","dateProcessed":"2026-09-21","caseNo":"CAS-2719824-J0L2G6","soldTo":"170306 - Kumkang (Hyundai Muyeok)","marketCode":"APAC","country":"KR","qty":1,"remarks":"W000268029","status":"Completed","segments":[{"status":"On Process","start":1789787696772,"end":1789787700430},{"status":"On Process","start":1789788085651,"end":1789788087185},{"status":"On Process","start":1789788388972,"end":1789788390448},{"status":"On Process","start":1789791871542,"end":1789791873774},{"status":"On Process","start":1789963067809,"end":1789963069403},{"status":"On Process","start":1789963936418,"end":1789963964582},{"status":"On Process","start":1789980379843,"end":1789980753204}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1789791263973-syh1n","dateReceived":"2026-09-15","dateProcessed":"2026-09-21","caseNo":"CAS-2719824-J0L2G6","soldTo":"175926 - Kumkang (Hyundai Mia)","marketCode":"APAC","country":"KR","qty":1,"remarks":"W000268033","status":"Completed","segments":[{"status":"On Process","start":1789791263973,"end":1789791268659},{"status":"On Process","start":1789980854495,"end":1789981031254},{"status":"On Process","start":1790137743526,"end":1790137781423}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1789791299950-n94iu","dateReceived":"2026-09-15","dateProcessed":"2026-09-21","caseNo":"CAS-2719824-J0L2G6","soldTo":"191314 - Kumkang(Lotte Inchoen)","marketCode":"APAC","country":"KR","qty":1,"remarks":"W000268035","status":"Completed","segments":[{"status":"On Process","start":1789791299950,"end":1789791371810},{"status":"On Process","start":1789981033195,"end":1789981191714},{"status":"On Process","start":1790137836689,"end":1790137879741}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1789791370105-lu0b7","dateReceived":"2026-09-15","dateProcessed":"2026-09-21","caseNo":"CAS-2719824-J0L2G6","soldTo":"175886 - Polaris optical","marketCode":"APAC","country":"KR","qty":1,"remarks":"W000268036","status":"Completed","segments":[{"status":"On Process","start":1789791370105,"end":1789791372275},{"status":"On Process","start":1789981223644,"end":1789981240391},{"status":"On Process","start":1790137903259,"end":1790137951815}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1789791397078-a77vv","dateReceived":"2026-09-15","dateProcessed":"2026-09-21","caseNo":"CAS-2719824-J0L2G6","soldTo":"170647 - Noongm Eyewear","marketCode":"APAC","country":"KR","qty":1,"remarks":"W000268039","status":"Completed","segments":[{"status":"On Process","start":1789791397078,"end":1789791399414},{"status":"On Process","start":1790138100239,"end":1790138228947}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1789791418862-2ysjn","dateReceived":"2026-09-15","dateProcessed":"2026-09-21","caseNo":"CAS-2719824-J0L2G6","soldTo":"185073 - OJO optical","marketCode":"APAC","country":"KR","qty":1,"remarks":"W000268041","status":"Completed","segments":[{"status":"On Process","start":1789791418862,"end":1789791420144},{"status":"On Process","start":1790138474707,"end":1790138545379}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1789791443664-x5nxl","dateReceived":"2026-09-15","dateProcessed":"2026-09-21","caseNo":"CAS-2719824-J0L2G6","soldTo":"170634 - Eyetalk optical","marketCode":"APAC","country":"KR","qty":1,"remarks":"W000268042","status":"Completed","segments":[{"status":"On Process","start":1789791443664,"end":1789791445367},{"status":"On Process","start":1790138706484,"end":1790138740352},{"status":"On Process","start":1790138742981,"end":1790138781673}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1789791462031-y9qdr","dateReceived":"2026-09-15","dateProcessed":"2026-09-21","caseNo":"CAS-2719824-J0L2G6","soldTo":"174811 - Lucid optical","marketCode":"APAC","country":"KR","qty":1,"remarks":"W000268047","status":"Completed","segments":[{"status":"On Process","start":1789791462031,"end":1789791463762},{"status":"On Process","start":1790138800986,"end":1790138867587}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1789791483055-0oczv","dateReceived":"2026-09-15","dateProcessed":"2026-09-21","caseNo":"CAS-2719824-J0L2G6","soldTo":"174472 - Blink(Itaewon)","marketCode":"APAC","country":"KR","qty":1,"remarks":"W000268048","status":"Completed","segments":[{"status":"On Process","start":1789791483055,"end":1789791486126},{"status":"On Process","start":1790138872203,"end":1790138962823}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1789791509337-7m4w1","dateReceived":"2026-09-15","dateProcessed":"2026-09-21","caseNo":"CAS-2719824-J0L2G6","soldTo":"173892 - About glass","marketCode":"APAC","country":"KR","qty":1,"remarks":"W000268051","status":"Completed","segments":[{"status":"On Process","start":1789791509337,"end":1789791511300},{"status":"On Process","start":1790138984884,"end":1790139034262}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1789791536335-hnuo4","dateReceived":"2026-09-15","dateProcessed":"2026-09-21","caseNo":"CAS-2719824-J0L2G6","soldTo":"189152 - Edit","marketCode":"APAC","country":"KR","qty":1,"remarks":"W000268052","status":"Completed","segments":[{"status":"On Process","start":1789791536335,"end":1789791538086},{"status":"On Process","start":1790139011926,"end":1790139083218}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1789791554494-o3hrd","dateReceived":"2026-09-15","dateProcessed":"2026-09-21","caseNo":"CAS-2719824-J0L2G6","soldTo":"191585 - Eyecatcher","marketCode":"APAC","country":"KR","qty":1,"remarks":"W000268054","status":"Completed","segments":[{"status":"On Process","start":1789791554494,"end":1789791556700},{"status":"On Process","start":1790139043788,"end":1790139113382}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1789791571746-k933d","dateReceived":"2026-09-15","dateProcessed":"2026-09-21","caseNo":"CAS-2719824-J0L2G6","soldTo":"175670 - Optical lab","marketCode":"APAC","country":"KR","qty":1,"remarks":"W000268055","status":"Completed","segments":[{"status":"On Process","start":1789791571746,"end":1789791576212},{"status":"On Process","start":1790139086554,"end":1790139155608}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1789791594014-bq68k","dateReceived":"2026-09-15","dateProcessed":"2026-09-21","caseNo":"CAS-2719824-J0L2G6","soldTo":"171481 - Gloss optical","marketCode":"APAC","country":"KR","qty":1,"remarks":"W000268056","status":"Completed","segments":[{"status":"On Process","start":1789791594014,"end":1789791596707},{"status":"On Process","start":1790139136922,"end":1790139252757}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1789791611740-lsvm0","dateReceived":"2026-09-15","dateProcessed":"2026-09-21","caseNo":"CAS-2719824-J0L2G6","soldTo":"186717 - Cube optical","marketCode":"APAC","country":"KR","qty":1,"remarks":"W000268057","status":"Completed","segments":[{"status":"On Process","start":1789791611740,"end":1789791613226},{"status":"On Process","start":1790139160030,"end":1790139191793},{"status":"On Process","start":1790139216845,"end":1790139283836}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1789979820652-ih86q","dateReceived":"2026-09-15","dateProcessed":"2026-09-21","caseNo":"CAS-2719824-J0L2G6","soldTo":"171345 - Bom optical","marketCode":"APAC","country":"KR","qty":1,"remarks":"W000268059","status":"Completed","segments":[{"status":"On Process","start":1789979820652,"end":1789979833756},{"status":"On Process","start":1790139253566,"end":1790139359084}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1789979850095-adetv","dateReceived":"2026-09-15","dateProcessed":"2026-09-21","caseNo":"CAS-2719824-J0L2G6","soldTo":"169593 - Kumkang (Hyundai Apgujung)","marketCode":"APAC","country":"KR","qty":5,"remarks":"W000269368","status":"Completed","segments":[{"status":"On Process","start":1789979850095,"end":1789979853442},{"status":"On Process","start":1790312540191,"end":1790312542164},{"status":"On Process","start":1790313052928,"end":1790313079571},{"status":"On Process","start":1790313084319,"end":1790313101872},{"status":"On Process","start":1790322670339,"end":1790322704751},{"status":"On Process","start":1790322859084,"end":1790322883909},{"status":"On Process","start":1790331035209,"end":1790331040155},{"status":"On Process","start":1790331045039,"end":1790331978718},{"status":"On Process","start":1790340641971,"end":1790340646484}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1789979877194-w2hyj","dateReceived":"2026-09-15","dateProcessed":"2026-09-21","caseNo":"CAS-2719824-J0L2G6","soldTo":"170328 - Blink(Mapo)","marketCode":"APAC","country":"KR","qty":1,"remarks":"W000269371","status":"Completed","segments":[{"status":"On Process","start":1789979877194,"end":1789979884022},{"status":"On Process","start":1790340643325,"end":1790340646973},{"status":"On Process","start":1790341113129,"end":1790341184757}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1789980026698-xk6r7","dateReceived":"2026-09-15","dateProcessed":"2026-09-21","caseNo":"CAS-2719824-J0L2G6","soldTo":"171226 - Viewraum","marketCode":"APAC","country":"KR","qty":1,"remarks":"W000269372","status":"Completed","segments":[{"status":"On Process","start":1789980026698,"end":1789980028775},{"status":"On Process","start":1790340644111,"end":1790340647313},{"status":"On Process","start":1790341213763,"end":1790341286456}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1789980056427-ynmg6","dateReceived":"2026-09-15","dateProcessed":"2026-09-21","caseNo":"CAS-2719824-J0L2G6","soldTo":"176234 - Eyevelab","marketCode":"APAC","country":"KR","qty":1,"remarks":"W000269373","status":"Completed","segments":[{"status":"On Process","start":1789980056427,"end":1789980060355},{"status":"On Process","start":1790340644913,"end":1790340647659},{"status":"On Process","start":1790341291662,"end":1790342011721}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"00:2:06","cancelled":false},{"id":"1789995200184-nrdoy","dateReceived":"2026-09-20","dateProcessed":"2026-09-22","caseNo":"CAS-2727865-Z7R5W1","soldTo":"173149 - BY EDER","marketCode":"EU","country":"DA","qty":1,"remarks":"W000268112","status":"Completed","segments":[{"status":"On Process","start":1789995200184,"end":1789995203184},{"status":"On Process","start":1790139285479,"end":1790139290335},{"status":"On Process","start":1790143691288,"end":1790143820020}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790078449241-nrkq2","dateReceived":"2026-09-18","dateProcessed":"2026-09-22","caseNo":"CAS-2725966-C5J4C4","soldTo":"178340 - Puyi Optica","marketCode":"APAC","country":"PUYI","qty":1,"remarks":"W000268173","status":"Completed","segments":[{"status":"On Process","start":1790078449241,"end":1790078451479},{"status":"On Process","start":1790148712702,"end":1790148865126}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790078482088-q0avz","dateReceived":"2026-09-18","dateProcessed":"2026-09-22","caseNo":"CAS-2725966-C5J4C4","soldTo":"178334 - Puyi Optical","marketCode":"APAC","country":"PUYI","qty":1,"remarks":"W000268177","status":"Completed","segments":[{"status":"On Process","start":1790078482088,"end":1790078518217},{"status":"On Process","start":1790148869209,"end":1790149031300}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790078515901-qc9sg","dateReceived":"2026-09-18","dateProcessed":"2026-09-22","caseNo":"CAS-2725966-C5J4C4","soldTo":"178389 - Puyi Optical Shenyang","marketCode":"APAC","country":"PUYI","qty":1,"remarks":"W000268181","status":"Completed","segments":[{"status":"On Process","start":1790078515901,"end":1790078518507},{"status":"On Process","start":1790149056187,"end":1790149249737}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790078557141-ns7pd","dateReceived":"2026-09-18","dateProcessed":"2026-09-22","caseNo":"CAS-2725966-C5J4C4","soldTo":"177947 - Puyi Optical","marketCode":"APAC","country":"PUYI","qty":1,"remarks":"W000268185","status":"Completed","segments":[{"status":"On Process","start":1790078557141,"end":1790078558929},{"status":"On Process","start":1790149285578,"end":1790149401943}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790078590392-v7pio","dateReceived":"2026-09-18","dateProcessed":"2026-09-22","caseNo":"CAS-2725966-C5J4C4","soldTo":"178388 - BJ SKP Point De Vue","marketCode":"APAC","country":"PUYI","qty":1,"remarks":"W000268188","status":"Completed","segments":[{"status":"On Process","start":1790078590392,"end":1790078592393},{"status":"On Process","start":1790149455400,"end":1790149592853}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790078634390-ceyxr","dateReceived":"2026-09-18","dateProcessed":"2026-09-22","caseNo":"CAS-2725966-C5J4C4","soldTo":"178257 - PUYI","marketCode":"APAC","country":"PUYI","qty":1,"remarks":"W000268191","status":"Completed","segments":[{"status":"On Process","start":1790078634390,"end":1790078665621},{"status":"On Process","start":1790149604260,"end":1790149717526}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790078663334-5bo89","dateReceived":"2026-09-18","dateProcessed":"2026-09-22","caseNo":"CAS-2725966-C5J4C4","soldTo":"178357 - Puyi Plaza 66 Store","marketCode":"APAC","country":"PUYI","qty":1,"remarks":"W000268194","status":"Completed","segments":[{"status":"On Process","start":1790078663334,"end":1790078665970},{"status":"On Process","start":1790149759181,"end":1790149961734}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790078709270-wmb3i","dateReceived":"2026-09-18","dateProcessed":"2026-09-22","caseNo":"CAS-2725966-C5J4C4","soldTo":"177949 - Puyi Optical","marketCode":"APAC","country":"PUYI","qty":1,"remarks":"W000268237","status":"Completed","segments":[{"status":"On Process","start":1790078709270,"end":1790078711263},{"status":"On Process","start":1790152704658,"end":1790152713145}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"00:04:10","cancelled":false},{"id":"1790078748372-iaqmp","dateReceived":"2026-09-18","dateProcessed":"2026-09-22","caseNo":"CAS-2725966-C5J4C4","soldTo":"174851 - Puyi Optical","marketCode":"APAC","country":"PUYI","qty":1,"remarks":"W000268240","status":"Completed","segments":[{"status":"On Process","start":1790078748372,"end":1790078778906},{"status":"On Process","start":1790152735705,"end":1790152918765}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790078776471-jv469","dateReceived":"2026-09-18","dateProcessed":"2026-09-22","caseNo":"CAS-2725966-C5J4C4","soldTo":"178384 - Puyi Optical","marketCode":"APAC","country":"PUYI","qty":1,"remarks":"W000268245","status":"Completed","segments":[{"status":"On Process","start":1790078776471,"end":1790078779240},{"status":"On Process","start":1790153104505,"end":1790153241635}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790078817253-3jtca","dateReceived":"2026-09-18","dateProcessed":"2026-09-18","caseNo":"CAS-2725966-C5J4C4","soldTo":"178222 - PUYI OPTICAL HANGZHOU","marketCode":"APAC","country":"PUYI","qty":1,"remarks":"W000268250","status":"Completed","segments":[{"status":"On Process","start":1790078817253,"end":1790078818876},{"status":"On Process","start":1790153250906,"end":1790153398991}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790078851109-qfbc2","dateReceived":"2026-09-18","dateProcessed":"2026-09-22","caseNo":"CAS-2725966-C5J4C4","soldTo":"178235 - PUYI OPTICAL-Ningbo","marketCode":"APAC","country":"PUYI","qty":1,"remarks":"W000268255","status":"Completed","segments":[{"status":"On Process","start":1790078851109,"end":1790078952513},{"status":"On Process","start":1790153407239,"end":1790153521158}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790078876012-7ufrt","dateReceived":"2026-09-18","dateProcessed":"2026-09-22","caseNo":"CAS-2725966-C5J4C4","soldTo":"174769 - PUYI OPTICAL-Store","marketCode":"APAC","country":"PUYI","qty":1,"remarks":"W000268259","status":"Completed","segments":[{"status":"On Process","start":1790078876012,"end":1790078952869},{"status":"On Process","start":1790153546137,"end":1790153625353}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790078923387-fhwz3","dateReceived":"2026-09-18","dateProcessed":"2026-09-22","caseNo":"CAS-2725966-C5J4C4","soldTo":"178260 - Puyi Optical","marketCode":"APAC","country":"PUYI","qty":1,"remarks":"W000268262","status":"Completed","segments":[{"status":"On Process","start":1790078923387,"end":1790078953325},{"status":"On Process","start":1790153673264,"end":1790153735026}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790078950502-xozb0","dateReceived":"2026-09-18","dateProcessed":"2026-09-22","caseNo":"CAS-2725966-C5J4C4","soldTo":"174798 - PUYI OPTICAL-STORE","marketCode":"APAC","country":"PUYI","qty":1,"remarks":"W000268266","status":"Completed","segments":[{"status":"On Process","start":1790078950502,"end":1790078953716},{"status":"On Process","start":1790153770221,"end":1790153888749}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790078980495-al4pp","dateReceived":"2026-09-18","dateProcessed":"2026-09-22","caseNo":"CAS-2725966-C5J4C4","soldTo":"178409 - Puyi Optical","marketCode":"APAC","country":"PUYI","qty":1,"remarks":"W000268268","status":"Completed","segments":[{"status":"On Process","start":1790078980495,"end":1790078982247},{"status":"On Process","start":1790153972538,"end":1790154013361}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"00:03:42","cancelled":false},{"id":"1790079014036-72gda","dateReceived":"2026-09-18","dateProcessed":"2026-09-22","caseNo":"CAS-2725966-C5J4C4","soldTo":"178352 - Puyi Optical STORE","marketCode":"APAC","country":"PUYI","qty":1,"remarks":"W000268276","status":"Completed","segments":[{"status":"On Process","start":1790079014036,"end":1790079055114},{"status":"On Process","start":1790154213753,"end":1790154393321}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790079052417-vnc2n","dateReceived":"2026-09-18","dateProcessed":"2026-09-22","caseNo":"CAS-2725966-C5J4C4","soldTo":"179509 - Puyi Optical","marketCode":"APAC","country":"PUYI","qty":1,"remarks":"W000268285","status":"Completed","segments":[{"status":"On Process","start":1790079052417,"end":1790079055478},{"status":"On Process","start":1790154784943,"end":1790154952399}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790079120094-zf07r","dateReceived":"2026-09-18","dateProcessed":"2026-09-22","caseNo":"CAS-2725966-C5J4C4","soldTo":"178351 - Puyi Optical","marketCode":"APAC","country":"PUYI","qty":1,"remarks":"W000268290","status":"Completed","segments":[{"status":"On Process","start":1790079120094,"end":1790079146652},{"status":"On Process","start":1790155019727,"end":1790155117006}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790079144460-vnaqy","dateReceived":"2026-09-18","dateProcessed":"2026-09-22","caseNo":"CAS-2725966-C5J4C4","soldTo":"177843 - Puyi Xiamen MixC","marketCode":"APAC","country":"PUYI","qty":1,"remarks":"W000268294","status":"Completed","segments":[{"status":"On Process","start":1790079144460,"end":1790079146971},{"status":"On Process","start":1790155115243,"end":1790155204341}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790079188784-o21js","dateReceived":"2026-09-18","dateProcessed":"2026-09-22","caseNo":"CAS-2725966-C5J4C4","soldTo":"178244 - Puyi Optical","marketCode":"APAC","country":"PUYI","qty":1,"remarks":"W000268296","status":"Completed","segments":[{"status":"On Process","start":1790079188784,"end":1790079191279},{"status":"On Process","start":1790155206479,"end":1790155347250}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790079245736-im654","dateReceived":"2026-09-18","dateProcessed":"2026-09-22","caseNo":"CAS-2725966-C5J4C4","soldTo":"174797 - Puyi Optical-Store","marketCode":"APAC","country":"PUYI","qty":1,"remarks":"W000268299","status":"Completed","segments":[{"status":"On Process","start":1790079245736,"end":1790079247518},{"status":"On Process","start":1790152501984,"end":1790152703141},{"status":"On Process","start":1790155353871,"end":1790155433521}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790079276950-6ihwj","dateReceived":"2026-09-18","dateProcessed":"2026-09-22","caseNo":"CAS-2725966-C5J4C4","soldTo":"186568 - Wuhan SKP Puyi","marketCode":"APAC","country":"PUYI","qty":1,"remarks":"W000268300","status":"Completed","segments":[{"status":"On Process","start":1790079276950,"end":1790079279089},{"status":"On Process","start":1790155434268,"end":1790155538850}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790079302395-vyn3y","dateReceived":"2026-09-18","dateProcessed":"2026-09-22","caseNo":"CAS-2725966-C5J4C4","soldTo":"186344 - LINDBERG by PUYI Optical","marketCode":"APAC","country":"PUYI","qty":2,"remarks":"W000268301","status":"Completed","segments":[{"status":"On Process","start":1790079302395,"end":1790079304076},{"status":"On Process","start":1790155544282,"end":1790155673813}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790079328847-kuwg3","dateReceived":"2026-09-18","dateProcessed":"2026-09-22","caseNo":"CAS-2725966-C5J4C4","soldTo":"178368 - Puyi Optical-Chengdu","marketCode":"APAC","country":"PUYI","qty":1,"remarks":"W000268304","status":"Completed","segments":[{"status":"On Process","start":1790079328847,"end":1790079330484},{"status":"On Process","start":1790155711855,"end":1790155817057}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790079359959-jle7b","dateReceived":"2026-09-18","dateProcessed":"2026-09-22","caseNo":"CAS-2725966-C5J4C4","soldTo":"178393 - Puyi Optical","marketCode":"APAC","country":"PUYI","qty":1,"remarks":"W000268306","status":"Completed","segments":[{"status":"On Process","start":1790079359959,"end":1790079389073},{"status":"On Process","start":1790155826279,"end":1790156016246}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790079387115-d75pm","dateReceived":"2026-09-18","dateProcessed":"2026-09-22","caseNo":"CAS-2725966-C5J4C4","soldTo":"178387 - Puyi Optical","marketCode":"APAC","country":"PUYI","qty":1,"remarks":"W000268307","status":"Completed","segments":[{"status":"On Process","start":1790079387115,"end":1790079388758},{"status":"On Process","start":1790156059457,"end":1790156202934}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790079444850-28unq","dateReceived":"2026-09-18","dateProcessed":"2026-09-22","caseNo":"CAS-2725966-C5J4C4","soldTo":"178369 - Xi’an SkP Puyi Optical (Shop B)","marketCode":"APAC","country":"PUYI","qty":1,"remarks":"W000268309","status":"Completed","segments":[{"status":"On Process","start":1790079444850,"end":1790079445901},{"status":"On Process","start":1790156210806,"end":1790156292541}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790079468765-0i702","dateReceived":"2026-09-18","dateProcessed":"2026-09-22","caseNo":"CAS-2725966-C5J4C4","soldTo":"178269 - CD SKP Puyi Optical","marketCode":"APAC","country":"PUYI","qty":1,"remarks":"W000268310","status":"Completed","segments":[{"status":"On Process","start":1790079468765,"end":1790079470241},{"status":"On Process","start":1790156341908,"end":1790156409825}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790079537985-2j1gn","dateReceived":"2026-09-18","dateProcessed":"2026-09-22","caseNo":"CAS-2729929-N3X0R7","soldTo":"139836 - Optik Wallner e.K.","marketCode":"EU","country":"DA","qty":1,"remarks":"W000268163","status":"Completed","segments":[{"status":"On Process","start":1790079537985,"end":1790079539922},{"status":"On Process","start":1790145506824,"end":1790145696191}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790143313249-n1qcy","dateReceived":"2026-09-22","dateProcessed":"2026-09-23","caseNo":"CAS-2731962-R4M9W7","soldTo":"176362 - LINDBERG by NAH+FERN","marketCode":"EU","country":"DA","qty":2,"remarks":"W000268092","status":"Completed","segments":[{"status":"On Process","start":1790143313249,"end":1790143359628},{"status":"On Process","start":1790146264824,"end":1790146567658}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790147246345-nc4g6","dateReceived":"2026-08-31","dateProcessed":"2026-09-23","caseNo":"CAS-2692885-D9Z7T9","soldTo":"176050 - Art Optical","marketCode":"APAC","country":"TW","qty":2,"remarks":"W000268160","status":"Completed","segments":[{"status":"On Process","start":1790147246345,"end":1790148135203},{"status":"On Process","start":1790148135714,"end":1790148175510}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790147415141-anokl","dateReceived":"2026-08-31","dateProcessed":"2026-09-23","caseNo":"CAS-2692885-D9Z7T9","soldTo":"174259 - Mingger Optical Store","marketCode":"APAC","country":"TW","qty":1,"remarks":"W000268168","status":"Completed","segments":[{"status":"On Process","start":1790147415141,"end":1790148100272},{"status":"On Process","start":1790148181140,"end":1790148376961}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790147517869-t6zz1","dateReceived":"2026-08-31","dateProcessed":"2026-09-23","caseNo":"CAS-2692885-D9Z7T9","soldTo":"185103 - Brighteyes Eyewear_Xinpu","marketCode":"APAC","country":"TW","qty":1,"remarks":"W000268171","status":"Completed","segments":[{"status":"On Process","start":1790147517869,"end":1790148100850},{"status":"On Process","start":1790148381438,"end":1790148596891}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790147572723-05s8c","dateReceived":"2026-08-31","dateProcessed":"2026-09-23","caseNo":"CAS-2692885-D9Z7T9","soldTo":"175833 - Brighteyes Eyewear Zhubei","marketCode":"APAC","country":"TW","qty":1,"remarks":"W000268172","status":"Completed","segments":[{"status":"On Process","start":1790147572723,"end":1790148101431},{"status":"On Process","start":1790148619825,"end":1790148783545}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790147662696-xo9qj","dateReceived":"2026-08-31","dateProcessed":"2026-09-23","caseNo":"CAS-2692885-D9Z7T9","soldTo":"143915 - Brighteyes Eyewear Taipei Arena","marketCode":"APAC","country":"TW","qty":1,"remarks":"W000268175","status":"Completed","segments":[{"status":"On Process","start":1790147662696,"end":1790148101974}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790149377496-3oiby","dateReceived":"2026-09-21","dateProcessed":"2026-09-23","caseNo":"CAS-2727912-V7K4K9","soldTo":"176044 - Vision Studio Optometrists","marketCode":"APAC","country":"AU","qty":1,"remarks":"W000268187","status":"Completed","segments":[{"status":"On Process","start":1790149377496,"end":1790149710712}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790157872041-90bhf","dateReceived":"2026-09-18","dateProcessed":"2026-09-23","caseNo":"CAS-2725966-C5J4C4","soldTo":"177901 - Puyi Optical","marketCode":"APAC","country":"PUYI","qty":11,"remarks":"W000268341","status":"Completed","segments":[{"status":"On Process","start":1790157872041,"end":1790157873876},{"status":"On Process","start":1790158116414,"end":1790158663020}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790157907348-eeh4o","dateReceived":"2026-09-18","dateProcessed":"2026-09-23","caseNo":"CAS-2725966-C5J4C4","soldTo":"178308 - Glasstique","marketCode":"APAC","country":"PUYI","qty":4,"remarks":"W000268345","status":"Completed","segments":[{"status":"On Process","start":1790157907348,"end":1790157908849},{"status":"On Process","start":1790158664970,"end":1790159022842}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790157940223-2j67p","dateReceived":"2026-09-18","dateProcessed":"2026-09-23","caseNo":"CAS-2725966-C5J4C4","soldTo":"178297 - LINDBERG by PUYI Optical","marketCode":"APAC","country":"PUYI","qty":2,"remarks":"W000268349","status":"Completed","segments":[{"status":"On Process","start":1790157940223,"end":1790157941173},{"status":"On Process","start":1790159027141,"end":1790159281391}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790157991478-0ab2j","dateReceived":"2026-09-18","dateProcessed":"2026-09-23","caseNo":"CAS-2725966-C5J4C4","soldTo":"175388 - Puyi Optical","marketCode":"APAC","country":"PUYI","qty":1,"remarks":"W000268351","status":"Completed","segments":[{"status":"On Process","start":1790157991478,"end":1790157992969},{"status":"On Process","start":1790159305304,"end":1790159373722}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790158026858-x9958","dateReceived":"2026-09-18","dateProcessed":"2026-09-23","caseNo":"CAS-2725966-C5J4C4","soldTo":"150010 - PUYI GROUP LIMITED TAIWAN BRANCH","marketCode":"APAC","country":"PUYI","qty":1,"remarks":"W000268353","status":"Completed","segments":[{"status":"On Process","start":1790158026858,"end":1790158028556},{"status":"On Process","start":1790159389241,"end":1790159482159}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790165849108-k8319","dateReceived":"2026-09-22","dateProcessed":"2026-09-23","caseNo":"CAS-2731902-W3Q2H9","soldTo":"178484 - LINDBERG by Al Jaber","marketCode":"BUFFER","country":"MEA - Dubai","qty":2,"remarks":"W000268407","status":"Completed","segments":[{"status":"On Process","start":1790165849108,"end":1790165850005},{"status":"On Process","start":1790165887620,"end":1790166089806}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790224230022-pstea-16","dateReceived":"2026-09-21","dateProcessed":"2026-09-22","caseNo":"CAS-2730309-R1T0D3","soldTo":"143368 - Optik Louis","marketCode":"EU","country":"DA","qty":1,"remarks":"W000268313","status":"Completed","segments":[{"status":"With Clarification","start":1790224230022,"end":1790224317792},{"status":"With Clarification","start":1790224323056,"end":1790235522480}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"03:08:07","cancelled":false,"breakdownOverride":"Sep 24\nWith Clarification 03:08:07"},{"id":"1790224230022-ttxp5-17","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"178394 - Dc Optics, Chengdu-Store","marketCode":"APAC","country":"CN","qty":5,"remarks":"W000268526","status":"Completed","segments":[{"status":"On Process","start":1790224230022,"end":1790224234332},{"status":"On Process","start":1790224377462,"end":1790224834103},{"status":"On Process","start":1790225557907,"end":1790225826681}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790224230022-1vt45-18","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"178374 - Eye Philo  镜之道","marketCode":"APAC","country":"CN","qty":2,"remarks":"W000268535","status":"Completed","segments":[{"status":"On Process","start":1790224230022,"end":1790224234826},{"status":"On Process","start":1790225977585,"end":1790226162640}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790224230022-497cv-20","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"174777 - Jing’s Joy","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000268538","status":"Completed","segments":[{"status":"On Process","start":1790224230022,"end":1790224236798},{"status":"On Process","start":1790226224175,"end":1790226334503}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790224230022-bpz3r-21","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"165545 - Qingmou Optical","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000268539","status":"Completed","segments":[{"status":"On Process","start":1790224230022,"end":1790224237240},{"status":"On Process","start":1790226336075,"end":1790226427608}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790224230022-ceudo-22","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"178371 - Noble Vision","marketCode":"APAC","country":"CN","qty":3,"remarks":"W000268541","status":"Completed","segments":[{"status":"On Process","start":1790224230022,"end":1790224239849},{"status":"On Process","start":1790226517006,"end":1790226687770}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790224230022-8ymcb-23","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"177951 - Cai Mao Optical-Store","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000268544","status":"Completed","segments":[{"status":"On Process","start":1790224230022,"end":1790224239548},{"status":"On Process","start":1790226689935,"end":1790226828178}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790224230022-9x3rh-24","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"185501 - Ben Zhi Optical-LND","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000268546","status":"Completed","segments":[{"status":"On Process","start":1790224230022,"end":1790224240347},{"status":"On Process","start":1790226836325,"end":1790226953822}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790224230022-t4c81-25","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"179497 - LUXGLASSES","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000268548","status":"Completed","segments":[{"status":"On Process","start":1790224230022,"end":1790224238370},{"status":"On Process","start":1790226954722,"end":1790227025070}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790224230022-1hu1z-26","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"136045 - JLBS","marketCode":"APAC","country":"CN","qty":2,"remarks":"W000268549","status":"Completed","segments":[{"status":"On Process","start":1790224230022,"end":1790225296783},{"status":"On Process","start":1790227066557,"end":1790227168756}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790224230022-0tx6x-27","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"160102 - CLSTUDIO","marketCode":"APAC","country":"CN","qty":2,"remarks":"W000268550","status":"Completed","segments":[{"status":"On Process","start":1790224230022,"end":1790225289675},{"status":"On Process","start":1790227169430,"end":1790227273488}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790224230022-h722k-28","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"185502 - SUZHOU SHIBOYUAN","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000268552","status":"Completed","segments":[{"status":"On Process","start":1790224230022,"end":1790225289328},{"status":"On Process","start":1790227277449,"end":1790227354989}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790224230022-kikks-29","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"194560 - Suya Optical","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000268553","status":"Completed","segments":[{"status":"On Process","start":1790224230022,"end":1790225288979},{"status":"On Process","start":1790227375103,"end":1790227509955}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790224230022-hf9v3-30","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"175758 - the WAREHOUSE optic","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000268555","status":"Completed","segments":[{"status":"On Process","start":1790224230022,"end":1790224241424},{"status":"On Process","start":1790227513924,"end":1790227609150}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790224230022-00gdc-31","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"175767 - FEO Optical","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000268556","status":"Completed","segments":[{"status":"On Process","start":1790224230022,"end":1790224241773},{"status":"On Process","start":1790227609820,"end":1790227698548}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790224230022-kw0kc-32","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"187755 - Zeiss Vision Center","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000268559","status":"Completed","segments":[{"status":"On Process","start":1790224230022,"end":1790224242160},{"status":"On Process","start":1790227699958,"end":1790227811853}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790224230022-1thh1-33","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"190071 - Hui Yu Jing She (Jingkai Store)","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000268560","status":"Completed","segments":[{"status":"On Process","start":1790224230022,"end":1790224242526},{"status":"On Process","start":1790227812628,"end":1790227925674}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790224230022-yej67-34","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"178366 - Ming Liang Optical","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000268562","status":"Completed","segments":[{"status":"On Process","start":1790224230022,"end":1790224242981},{"status":"On Process","start":1790227926433,"end":1790228004735}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790224230022-ihy9s-35","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"179422 - Willing Opitcal","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000268563","status":"Completed","segments":[{"status":"On Process","start":1790224230022,"end":1790224243469},{"status":"On Process","start":1790228027962,"end":1790228028073},{"status":"On Process","start":1790228028564,"end":1790228081955}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790224230022-lunxa-36","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"177873 - the WAREHOUSE optic","marketCode":"APAC","country":"CN","qty":2,"remarks":"W000268564","status":"Completed","segments":[{"status":"On Process","start":1790224230022,"end":1790224244429},{"status":"On Process","start":1790228082819,"end":1790228225166}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790224230022-96rao-38","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"176163 - BeiJing Amoon optical","marketCode":"APAC","country":"CN","qty":2,"remarks":"W000268566","status":"Completed","segments":[{"status":"On Process","start":1790224230022,"end":1790224245266},{"status":"On Process","start":1790228228606,"end":1790228319006}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-p1cny-16","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"178266 - Dc Optics,Beijing-Store","marketCode":"APAC","country":"CN","qty":5,"remarks":"W000268573","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228623036},{"status":"On Process","start":1790229099812,"end":1790229366690}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-ypdsb-18","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"175687 - RICH OPTIC","marketCode":"APAC","country":"CN","qty":2,"remarks":"W000268579","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228624402},{"status":"On Process","start":1790229367993,"end":1790229500593}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-h4f1x-20","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"175711 - AB Optical Select","marketCode":"APAC","country":"CN","qty":4,"remarks":"W000268582","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228625110},{"status":"On Process","start":1790229534984,"end":1790229536630},{"status":"On Process","start":1790231339827,"end":1790231613646}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-ghte3-23","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"185746 - BEIJING MINGMOU JINGMU","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000268604","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228626656},{"status":"On Process","start":1790231615343,"end":1790231726523}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-b2crs-24","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"178390 - LINDBERG by Dc Optics","marketCode":"APAC","country":"CN","qty":5,"remarks":"W000268607","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228627761},{"status":"On Process","start":1790231738063,"end":1790231996129}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-lo2em-26","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"175707 - WHITECROW","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000268608","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228628877},{"status":"On Process","start":1790231997972,"end":1790232059204}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-zkno9-27","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"175729 - PAGEANT","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000268610","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228629235},{"status":"On Process","start":1790232069314,"end":1790232136585}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-gezs7-28","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"177936 - Eye Philo (Shanghai)","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000268614","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228629710},{"status":"On Process","start":1790232206787,"end":1790232273011}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-tt1d3-29","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"193008 - YIMU OPTICAL.","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000268617","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228630056},{"status":"On Process","start":1790232236171,"end":1790232333437}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-ap8g0-30","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"186681 - The WAREHOUSE optic","marketCode":"APAC","country":"CN","qty":2,"remarks":"W000268624","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228631019},{"status":"On Process","start":1790232334303,"end":1790232571487}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-nox8w-32","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"175814 - jidu optical","marketCode":"APAC","country":"CN","qty":2,"remarks":"W000268627","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228631762},{"status":"On Process","start":1790232584128,"end":1790232711970}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-0o4qc-34","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"177946 - UENO EYEWEAR","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000268632","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228632754},{"status":"On Process","start":1790232763896,"end":1790232867114}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-iumyl-35","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"175760 - Yo Ease","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000268635","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228634176},{"status":"On Process","start":1790232871215,"end":1790232952417}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-vuoel-36","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"175812 - Eye Planet","marketCode":"APAC","country":"CN","qty":2,"remarks":"W000268639","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228634490},{"status":"On Process","start":1790232953205,"end":1790233064814}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-8rt0k-37","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"175806 - A LONG OPTIC","marketCode":"APAC","country":"CN","qty":2,"remarks":"W000268640","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228635287},{"status":"On Process","start":1790233065449,"end":1790233272439}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-jmu8e-39","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"187746 - Wenjingge","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000268642","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228636385},{"status":"On Process","start":1790233286070,"end":1790233359641}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-nm624-40","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"179496 - AB Premium Optic","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000268646","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228636812},{"status":"On Process","start":1790233360590,"end":1790233463698}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-33qg2-41","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"194752 - Jing Heng Vision","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000268648","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228637280},{"status":"On Process","start":1790233470971,"end":1790233551011}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-fj1up-42","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"159348 - Ourskey optical","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000268650","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228637755},{"status":"On Process","start":1790233552222,"end":1790233657725}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-mlojp-43","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"186093 - Title Glasses BJ","marketCode":"APAC","country":"CN","qty":6,"remarks":"W000268653","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228638305},{"status":"On Process","start":1790233668579,"end":1790233943258}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-ot7fc-45","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"195096 - Title Glasses SH","marketCode":"APAC","country":"CN","qty":6,"remarks":"W000268655","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228640391},{"status":"On Process","start":1790233946796,"end":1790233984036},{"status":"On Process","start":1790234093488,"end":1790234556174}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-qx5rq-47","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"195097 - Title Glasses SZ","marketCode":"APAC","country":"CN","qty":6,"remarks":"W000268671","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228641074},{"status":"On Process","start":1790234557279,"end":1790235047614}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-0qq7b-50","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"175790 - one da","marketCode":"APAC","country":"CN","qty":2,"remarks":"W000268679","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228642860},{"status":"On Process","start":1790235055188,"end":1790235210668}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-f0eud-51","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"175837 - look 2.0","marketCode":"APAC","country":"CN","qty":4,"remarks":"W000268683","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228644062},{"status":"On Process","start":1790235242928,"end":1790235408142}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-y7qfs-53","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"178313 - mu gen optical","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000268690","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228645290},{"status":"On Process","start":1790235410628,"end":1790235476960}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-53tfh-54","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"175746 - jing ying","marketCode":"APAC","country":"CN","qty":2,"remarks":"W000268693","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228645969},{"status":"On Process","start":1790235481158,"end":1790235549008}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-wlg3f-55","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"175839 - LIN GAN eyewear studio","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000268695","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228646344},{"status":"On Process","start":1790235579606,"end":1790235758452}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-r0qut-56","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"175765 - WOMU Optical-LND","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000268698","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228647437},{"status":"On Process","start":1790235786111,"end":1790235833360}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-gumhl-57","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"187886 - Yuanmu Optical","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000268701","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228647036},{"status":"On Process","start":1790235834995,"end":1790235926811}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-wummh-58","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"175811 - Hui Yu Jing She","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000268704","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228648648},{"status":"On Process","start":1790235928743,"end":1790236015215}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-tdo7d-59","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"160102 - CLSTUDIO","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000268706","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228649283},{"status":"On Process","start":1790236035067,"end":1790236102644}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-zheay-60","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"130409 - Wuliangcai Optical（Danyang）","marketCode":"APAC","country":"CN","qty":2,"remarks":"W000268709","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228648980},{"status":"On Process","start":1790236133067,"end":1790236213104}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-fck5n-61","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"176172 - LMC","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000268713","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228649823},{"status":"On Process","start":1790236221890,"end":1790236349699}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-3gytr-62","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"186975 - Finest Vision","marketCode":"APAC","country":"CN","qty":2,"remarks":"W000268769","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228650197},{"status":"On Process","start":1790239580463,"end":1790239718648}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-wx5om-63","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"178259 - DC Optics","marketCode":"APAC","country":"CN","qty":5,"remarks":"W000268772","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228651302},{"status":"On Process","start":1790239760850,"end":1790239941718}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-9z6i0-64","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"137688 - Ji Nan Mao Chang","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000268774","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228651596},{"status":"On Process","start":1790239953581,"end":1790240020047}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false},{"id":"1790228616377-2mvp0-65","dateReceived":"2026-09-18","dateProcessed":"2026-09-24","caseNo":"CAS-2725467-D9M5W6","soldTo":"178282 - Mao Chang Optical","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000268776","status":"Completed","segments":[{"status":"On Process","start":1790228616377,"end":1790228651951},{"status":"On Process","start":1790240057649,"end":1790241883713}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","cancelled":false,"breakdownOverride":"Sep 24\nOn Process 00:06:01"},{"id":"1790342084500-7jzx1","dateReceived":"2026-09-25","dateProcessed":"2026-09-25","caseNo":"CAS-2738040-K1V6N4","soldTo":"100120 - OTTICA VEDIAMOCI S.R.L.","marketCode":"BUFFER","country":"IT - Italy","qty":1,"remarks":"W000269731","status":"Completed","segments":[{"status":"On Process","start":1790381212217,"end":1790381214359},{"status":"On Process","start":1790382719311,"end":1790382721361},{"status":"On Process","start":1790382838736,"end":1790382840991},{"status":"On Process","start":1790382877307,"end":1790382879511},{"status":"On Process","start":1790382896854,"end":1790382899017},{"status":"On Process","start":1790409322941,"end":1790409325217},{"status":"On Process","start":1790409457000,"end":1790409457700},{"status":"On Process","start":1790409483592,"end":1790409486742},{"status":"On Process","start":1790409894438,"end":1790409896960},{"status":"On Process","start":1790410041297,"end":1790410044533},{"status":"On Process","start":1790572169464,"end":1790572170044},{"status":"On Process","start":1790583947080,"end":1790584160264}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1790569218476-vfvw1","dateReceived":"2026-09-25","dateProcessed":"2026-09-28","caseNo":"CAS-2737677-S7G5Q4","soldTo":"174840 - The Eye Piece","marketCode":"APAC","country":"AU","qty":1,"remarks":"W000269579","status":"Completed","segments":[{"status":"On Process","start":1790569240400,"end":1790572074703}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1790658430956-oj5vr","dateReceived":"2026-09-29","dateProcessed":"2026-09-29","caseNo":"CAS-2740166-F7N8S0","soldTo":"1100277 - OPTICAL 88 (S) PTE LTD","marketCode":"CC","country":"SGP","qty":1,"remarks":"W000270077","status":"Completed","segments":[{"status":"On Process","start":1790658437132,"end":1790658565785}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1790756569689-dyryt","dateReceived":"2026-09-30","dateProcessed":"2026-09-30","caseNo":"CAS-2740170-F0H7Q7","soldTo":"152093-EYEWEAR OPTICS PTE LTD","marketCode":"CC","country":"SGP","qty":1,"remarks":"W000270585","status":"Completed","segments":[{"status":"On Process","start":1790756596537,"end":1790757256038}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1790830025693-0zx5v","dateReceived":"2026-09-30","dateProcessed":"2026-10-01","caseNo":"CAS-2745434-Q6S8X5","soldTo":"188965 - LINDBERG by The Eye Piece","marketCode":"APAC","country":"AU","qty":1,"remarks":"W000270863","status":"Completed","segments":[{"status":"On Process","start":1790830027488,"end":1790830270904}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1790853312878-sput8","dateReceived":"2026-09-22","dateProcessed":"2026-10-01","caseNo":"CAS-2729985-J5H9F7","soldTo":"179465 - LINDBERG by President Optical, Hang","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000271113 ","status":"Completed","segments":[{"status":"On Process","start":1790853622892,"end":1790853718887}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1790930203251-nbc8e","dateReceived":"2026-10-02","dateProcessed":"2026-10-02","caseNo":"CAS-2749361-W6T3F8","soldTo":"194366 - LINDBERG by Bouquet Vision AOYAMA","marketCode":"APAC","country":"JP","qty":1,"remarks":"W000271397","status":"Completed","segments":[{"status":"On Process","start":1790930905453,"end":1790978523706}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"00:13:38","breakdownOverride":"","cancelled":false},{"id":"1791172713589-ubzth","dateReceived":"2026-10-05","dateProcessed":"2026-10-05","caseNo":"CAS-2750052-K1R1Q1","soldTo":"180517 - WKC OPTICAL","marketCode":"CC","country":"SGP","qty":2,"remarks":"W000271732","status":"Completed","segments":[{"status":"On Process","start":1791172922713,"end":1791173266757}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1791251219758-sbg6l","dateReceived":"2026-10-05","dateProcessed":"2026-10-06","caseNo":"CAS-2746213-P1M9R0","soldTo":"175388 - Puyi Optical","marketCode":"APAC","country":"PUYI","qty":1,"remarks":"W000272213","status":"Completed","segments":[{"status":"On Process","start":1791251388372,"end":1791251509341},{"status":"On Process","start":1791418824871,"end":1791418827978}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1791455010167-ttc4v","dateReceived":"2026-10-07","dateProcessed":"2026-10-08","caseNo":"CAS-2756101-T4P3T1","soldTo":"115374 - KOJIMA CO.,LTD.","marketCode":"APAC","country":"JP","qty":2,"remarks":"W000273355","status":"Completed","segments":[],"runningSince":null,"runningStatus":"On Process","onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1791517628956-vt09i","dateReceived":"2026-10-09","dateProcessed":"2026-10-09","caseNo":"CAS-2760762-H6W6K1","soldTo":"176982-Spectacle Hut Boutique MBS 1","marketCode":"CC","country":"SGP","qty":1,"remarks":"W000273575","status":"Completed","segments":[{"status":"On Process","start":1791518514321,"end":1791518516937},{"status":"On Process","start":1791518875330,"end":1791518877600},{"status":"On Process","start":1791518903250,"end":1791518905982},{"status":"On Process","start":1791519084559,"end":1791519197939}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1791517651309-zbtlx","dateReceived":"2026-10-09","dateProcessed":"2026-10-09","caseNo":"CAS-2760769-F4B7T6","soldTo":"176969-Spectacle Hut Boutique Jewel @ Chan","marketCode":"CC","country":"SGP","qty":1,"remarks":"W000273578","status":"Completed","segments":[{"status":"On Process","start":1791519244423,"end":1791519345338}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1791517681360-yu9z5","dateReceived":"2026-10-09","dateProcessed":"2026-10-09","caseNo":"CAS-2760770-P1M1W0","soldTo":"191588-Spectacle Hut Boutique Takashimaya","marketCode":"CC","country":"SGP","qty":1,"remarks":"W000273580","status":"Completed","segments":[{"status":"On Process","start":1791519382138,"end":1791519519363}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1791517710190-twl9u","dateReceived":"2026-10-09","dateProcessed":"2026-10-09","caseNo":"CAS-2760771-Q0Q6S0","soldTo":"194372-Spectacle Hut Boutique ION Orchard","marketCode":"CC","country":"SGP","qty":1,"remarks":"W000273583","status":"Completed","segments":[{"status":"On Process","start":1791519539672,"end":1791519626224}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1791517736239-owbfx","dateReceived":"2026-10-09","dateProcessed":"2026-10-09","caseNo":"CAS-2760772-V9V6V6","soldTo":"160398-JAMCO OPTICAL & TRADING CO","marketCode":"BUFFER","country":"SGP - Singapore","qty":2,"remarks":"W000273585","status":"Completed","segments":[{"status":"On Process","start":1791518925726,"end":1791518927450},{"status":"On Process","start":1791519867758,"end":1791520112452},{"status":"On Process","start":1791520144671,"end":1791520181652},{"status":"On Process","start":1791520195072,"end":1791520197218}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"00:03:25","breakdownOverride":"Oct 9\nOn Process 00:03:25","cancelled":false},{"id":"1791540583400-t93yu","dateReceived":"2026-10-09","dateProcessed":"2026-10-09","caseNo":"CAS-2760849-F3B8M2","soldTo":"174848 - Neith Beijing","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000273792","status":"Completed","segments":[],"runningSince":null,"runningStatus":"On Process","onHold":false,"ptimeOverride":"00:04:26","breakdownOverride":"Oct 9\nOn Process 00:04:26","cancelled":false},{"id":"1791541158314-g3zee","dateReceived":"2026-10-09","dateProcessed":"2026-10-09","caseNo":"CAS-2760849-F3B8M2","soldTo":"175760 - Yo Ease","marketCode":"APAC","country":"CN","qty":2,"remarks":"W000273798","status":"Completed","segments":[],"runningSince":null,"runningStatus":"On Process","onHold":false,"ptimeOverride":"00:04:24","breakdownOverride":"Oct 9\nOn Process 00:04:24","cancelled":false},{"id":"1791541479562-xcmhb","dateReceived":"2026-10-09","dateProcessed":"2026-10-09","caseNo":"CAS-2760849-F3B8M2","soldTo":"175767 - FEO Optical","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000273794","status":"Completed","segments":[],"runningSince":null,"runningStatus":"On Process","onHold":false,"ptimeOverride":"00:03:42","breakdownOverride":"Oct 9\nOn Process 00:03:42","cancelled":false},{"id":"1791541672231-uyluk","dateReceived":"2026-10-09","dateProcessed":"2026-10-09","caseNo":"CAS-2760849-F3B8M2","soldTo":"175814 - jidu optical","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000273795","status":"Completed","segments":[],"runningSince":null,"runningStatus":"On Process","onHold":false,"ptimeOverride":"00:04:23","breakdownOverride":"Oct 9\nOn Process 00:04:23","cancelled":false},{"id":"1791541891240-d331t","dateReceived":"2026-10-09","dateProcessed":"2026-10-09","caseNo":"CAS-2760849-F3B8M2","soldTo":"177888 - M Color Optical","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000273784","status":"Completed","segments":[],"runningSince":null,"runningStatus":"On Process","onHold":false,"ptimeOverride":"00:04:59","breakdownOverride":"Oct 9\nOn Process 00:04:59","cancelled":false},{"id":"1791548309473-hjaz4","dateReceived":"2026-10-09","dateProcessed":"2026-10-09","caseNo":"CAS-2760849-F3B8M2","soldTo":"178312 - Baodao Optical（Wener）-store","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000273842","status":"Completed","segments":[],"runningSince":null,"runningStatus":"On Process","onHold":false,"ptimeOverride":"00:03:22","breakdownOverride":"Oct 9\nOn Process 00:03:22","cancelled":false},{"id":"1791548521702-zyvag","dateReceived":"2026-10-09","dateProcessed":"2026-10-09","caseNo":"CAS-2760849-F3B8M2","soldTo":"178320 - Baodao Optical-store","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000273845","status":"Completed","segments":[],"runningSince":null,"runningStatus":"On Process","onHold":false,"ptimeOverride":"00:04:52","breakdownOverride":"Oct 9\nOn Process 00:04:52","cancelled":false},{"id":"1791548710072-tmf1a","dateReceived":"2026-10-09","dateProcessed":"2026-10-09","caseNo":"CAS-2760849-F3B8M2","soldTo":"178333 - Baodao Optical-store","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000273849","status":"Completed","segments":[],"runningSince":null,"runningStatus":"On Process","onHold":false,"ptimeOverride":"00:04:31","breakdownOverride":"Oct 9\nOn Process 00:04:31","cancelled":false},{"id":"1791548975242-eqbcp","dateReceived":"2026-10-09","dateProcessed":"2026-10-09","caseNo":"CAS-2760849-F3B8M2","soldTo":"178401 - Baodao Optical（Xingguang）","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000273854","status":"Completed","segments":[],"runningSince":null,"runningStatus":"On Process","onHold":false,"ptimeOverride":"00:05:25","breakdownOverride":"Oct 9\nOn Process 00:05:25","cancelled":false},{"id":"1791549471631-a3mr0","dateReceived":"2026-10-09","dateProcessed":"2026-10-09","caseNo":"CAS-2760849-F3B8M2","soldTo":"187886 - Yuanmu Optical","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000273866","status":"Completed","segments":[],"runningSince":null,"runningStatus":"On Process","onHold":false,"ptimeOverride":"00:05:05","breakdownOverride":"Oct 9\nOn Process 00:05:05","cancelled":false},{"id":"1791549760124-9s34j","dateReceived":"2026-10-09","dateProcessed":"2026-10-09","caseNo":"CAS-2760849-F3B8M2","soldTo":"191014 - YI OPTICAL","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000273869","status":"Completed","segments":[],"runningSince":null,"runningStatus":"On Process","onHold":false,"ptimeOverride":"00:03:55","breakdownOverride":"Oct 9\nOn Process 00:03:55","cancelled":false},{"id":"1791550165649-o1e41","dateReceived":"2026-10-09","dateProcessed":"2026-10-09","caseNo":"CAS-2760849-F3B8M2","soldTo":"194565 - Right Glasses","marketCode":"APAC","country":"CN","qty":2,"remarks":"W000273873","status":"Completed","segments":[],"runningSince":null,"runningStatus":"On Process","onHold":false,"ptimeOverride":"00:04:16","breakdownOverride":"Oct 9\nOn Process 00:04:16","cancelled":false},{"id":"1791550492517-ql6kp","dateReceived":"2026-10-09","dateProcessed":"2026-10-09","caseNo":"CAS-2760849-F3B8M2","soldTo":"195096 - TITLE OPTICAL SHANGHAI.","marketCode":"APAC","country":"CN","qty":3,"remarks":"W000273879","status":"Completed","segments":[],"runningSince":null,"runningStatus":"On Process","onHold":false,"ptimeOverride":"00:05:25","breakdownOverride":"Oct 9\nOn Process 00:05:25","cancelled":false},{"id":"1791550770182-r9g0w","dateReceived":"2026-10-09","dateProcessed":"2026-10-09","caseNo":"CAS-2760849-F3B8M2","soldTo":"195097 - Title Glass Shenzhen","marketCode":"APAC","country":"CN","qty":2,"remarks":"W000273880","status":"Completed","segments":[],"runningSince":null,"runningStatus":"On Process","onHold":false,"ptimeOverride":"00:04:36","breakdownOverride":"Oct 9\nOn Process 00:04:36","cancelled":false},{"id":"1791551310219-56a8e","dateReceived":"2026-10-09","dateProcessed":"2026-10-09","caseNo":"CAS-2760849-F3B8M2","soldTo":"175883 - 175883","marketCode":"APAC","country":"HK","qty":2,"remarks":"W000273887","status":"Completed","segments":[],"runningSince":null,"runningStatus":"On Process","onHold":false,"ptimeOverride":"00:03:42","breakdownOverride":"Oct 9\nOn Process 00:03:42","cancelled":false},{"id":"1791551700021-tv0pw","dateReceived":"2026-10-09","dateProcessed":"2026-10-09","caseNo":"CAS-2760849-F3B8M2","soldTo":"115432 - WIN OPTICAL CO","marketCode":"APAC","country":"HK","qty":2,"remarks":"W000273890","status":"Completed","segments":[],"runningSince":null,"runningStatus":"On Process","onHold":false,"ptimeOverride":"00:04:45","breakdownOverride":"Oct 9\nOn Process 00:04:45","cancelled":false},{"id":"1791551911528-04hk6","dateReceived":"2026-10-09","dateProcessed":"2026-10-09","caseNo":"CAS-2760849-F3B8M2","soldTo":"174815 - United Optical Company","marketCode":"APAC","country":"HK","qty":1,"remarks":"W000273896","status":"Completed","segments":[],"runningSince":null,"runningStatus":"On Process","onHold":false,"ptimeOverride":"00:04:51","breakdownOverride":"Oct 9\nOn Process 00:04:51","cancelled":false},{"id":"1791552284457-j8dkt","dateReceived":"2026-10-09","dateProcessed":"2026-10-09","caseNo":"CAS-2760849-F3B8M2","soldTo":"175867 - Century Optical One","marketCode":"APAC","country":"HK","qty":1,"remarks":"W000273902","status":"Completed","segments":[],"runningSince":null,"runningStatus":"On Process","onHold":false,"ptimeOverride":"00:03:25","breakdownOverride":"Oct 9\nOn Process 00:03:25","cancelled":false},{"id":"1791775412939-is39g","dateReceived":"2026-10-10","dateProcessed":"2026-10-12","caseNo":"CAS-2762283-K2S2B9","soldTo":"147886 - Ottica profili srl","marketCode":"BUFFER","country":"IT - Italy (Stefano Arnone)","qty":1,"remarks":"W000274170","status":"Completed","segments":[{"status":"On Process","start":1791775438953,"end":1791775578361}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1791878327494-3r8qv","dateReceived":"2026-10-12","dateProcessed":"2026-10-13","caseNo":"CAS-2765922-K6J2Z5","soldTo":"115724-GEORGETOWN OPTICIAN","marketCode":"NAM","country":"US","qty":1,"remarks":"W000274808","status":"Completed","segments":[],"runningSince":null,"runningStatus":"On Process","onHold":false,"ptimeOverride":"00:02:43","breakdownOverride":"Oct 9\nOn Process 00:02:43","cancelled":false},{"id":"1792048072625-wgvsc","dateReceived":"2026-10-14","dateProcessed":"2026-10-15","caseNo":"CAS-2769921-K0F3G4","soldTo":"195097 - Title Glass Shenzhen","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000275489","status":"Completed","segments":[{"status":"On Process","start":1792048074972,"end":1792048427506}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1792048418150-wmi75","dateReceived":"2026-10-14","dateProcessed":"2026-10-15","caseNo":"CAS-2769921-K0F3G4","soldTo":"194656 - Rulux Optical","marketCode":"APAC","country":"CN","qty":2,"remarks":"W000275492","status":"Completed","segments":[{"status":"On Process","start":1792048461605,"end":1792049331107}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"00:14:29","breakdownOverride":"Oct 15\nOn Process 00:14:29","cancelled":false},{"id":"1792049328601-5hck1","dateReceived":"2026-10-14","dateProcessed":"2026-10-15","caseNo":"CAS-2769921-K0F3G4","soldTo":"194458 - Yoran optical","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000275498","status":"Completed","segments":[],"runningSince":null,"runningStatus":"On Process","onHold":false,"ptimeOverride":"00:14:29","breakdownOverride":"Oct 15\nOn Process 00:14:29","cancelled":false},{"id":"1792050216855-cp0aj","dateReceived":"2026-10-14","dateProcessed":"2026-10-15","caseNo":"CAS-2770263-L5N5L5","soldTo":"115574 - ILOOK EYEWEAR","marketCode":"NAM","country":"US","qty":1,"remarks":"W000275512","status":"Completed","segments":[{"status":"On Process","start":1792050218559,"end":1792051438421}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1792051695420-ax4xm","dateReceived":"2026-10-14","dateProcessed":"2026-10-15","caseNo":"CAS-2770263-L5N5L5","soldTo":"188393 - KONSTANTIN VISION AND EYEWEAR CENTE","marketCode":"NAM","country":"US","qty":1,"remarks":"W000275531","status":"Completed","segments":[{"status":"On Process","start":1792051808977,"end":1792051889746}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1792051760959-v4b1i","dateReceived":"2026-10-14","dateProcessed":"2026-10-15","caseNo":"CAS-2770263-L5N5L5","soldTo":"138397 - FRENCH OPTICAL","marketCode":"NAM","country":"US","qty":1,"remarks":"W000275607","status":"Completed","segments":[{"status":"On Process","start":1792052083944,"end":1792052086180},{"status":"On Process","start":1792057498010,"end":1792057914255}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1792058117625-pgl8y","dateReceived":"2026-10-14","dateProcessed":"2026-10-15","caseNo":"CAS-2769921-K0F3G4","soldTo":"174848 - Neith Beijing","marketCode":"APAC","country":"CN","qty":"","remarks":"W000275626 - Cancelled","status":"Completed","segments":[{"status":"On Process","start":1792058122905,"end":1792058358369}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1792058355667-c3659","dateReceived":"2026-10-14","dateProcessed":"2026-10-15","caseNo":"CAS-2769921-K0F3G4","soldTo":"175907 - Essence","marketCode":"APAC","country":"CN","qty":1,"remarks":"W000275631","status":"Completed","segments":[{"status":"On Process","start":1792058360834,"end":1792058506593}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1792061883030-dus3y","dateReceived":"2026-10-14","dateProcessed":"2026-10-15","caseNo":"CAS-2769921-K0F3G4","soldTo":"195097 - Title Glass Shenzhen","marketCode":"APAC","country":"CN","qty":2,"remarks":"W000279346 - Temple 145","status":"Completed","segments":[{"status":"On Process","start":1792142038179,"end":1792142070430},{"status":"On Process","start":1792199322378,"end":1792199429200},{"status":"On Process","start":1792793528303,"end":1792793531968},{"status":"On Process","start":1792997559930,"end":1792997792103},{"status":"With Clarification","start":1792997792103,"end":1792998628835},{"status":"On Process","start":1792998628835,"end":1792999207503}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1792128107278-y7fdx","dateReceived":"2026-10-15","dateProcessed":"2026-10-16","caseNo":"CAS-2770617-D7M0R9","soldTo":"167524 - I - TOPIAN OPTICAL","marketCode":"NAM","country":"US","qty":1,"remarks":"W000275851","status":"Completed","segments":[{"status":"On Process","start":1792128110893,"end":1792128369851}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1792199513549-nuaxo","dateReceived":"2026-10-14","dateProcessed":"2026-10-17","caseNo":"CAS-2768379-B6K8C5","soldTo":"185544 - LINDBERG by Paris Miki","marketCode":"APAC","country":"JP","qty":3,"remarks":"W000276325","status":"Completed","segments":[{"status":"On Process","start":1792200634655,"end":1792200842998}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1792200307328-5zul5-17","dateReceived":"2026-10-14","dateProcessed":"2026-10-17","caseNo":"CAS-2768379-B6K8C5","soldTo":"1101562 - 1321 Miki Shinsaibashi Honten","marketCode":"APAC","country":"JP","qty":1,"remarks":"W000276326","status":"Completed","segments":[{"status":"On Process","start":1792200307328,"end":1792200316591},{"status":"On Process","start":1792200844663,"end":1792200930678}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1792200307328-1ae7p-18","dateReceived":"2026-10-14","dateProcessed":"2026-10-17","caseNo":"CAS-2768379-B6K8C5","soldTo":"175841 - FUJISAKI K.K. (RICH OPTIC TOKYO)","marketCode":"APAC","country":"JP","qty":2,"remarks":"W000276327","status":"Completed","segments":[{"status":"On Process","start":1792200307328,"end":1792200317264},{"status":"On Process","start":1792201299421,"end":1792201409939}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1792200307328-mmmo4-19","dateReceived":"2026-10-14","dateProcessed":"2026-10-17","caseNo":"CAS-2768379-B6K8C5","soldTo":"176016 - INSPIRAL, INC.","marketCode":"APAC","country":"JP","qty":1,"remarks":"W000276329","status":"Completed","segments":[{"status":"On Process","start":1792200307328,"end":1792200317605},{"status":"On Process","start":1792201415202,"end":1792201496956}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1792200307328-33afl-20","dateReceived":"2026-10-14","dateProcessed":"2026-10-17","caseNo":"CAS-2768379-B6K8C5","soldTo":"176069 - ODA TOKEITEN, Y.K.","marketCode":"APAC","country":"JP","qty":1,"remarks":"W000276330","status":"Completed","segments":[{"status":"On Process","start":1792200307328,"end":1792200318362},{"status":"On Process","start":1792201513174,"end":1792201589053}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1792200307328-6w00q-21","dateReceived":"2026-10-14","dateProcessed":"2026-10-17","caseNo":"CAS-2768379-B6K8C5","soldTo":"123540 - Nakazato Megane","marketCode":"APAC","country":"JP","qty":1,"remarks":"W000276332","status":"Completed","segments":[{"status":"On Process","start":1792200307328,"end":1792200318685},{"status":"On Process","start":1792201621032,"end":1792201696043}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1792200307328-dm281-22","dateReceived":"2026-10-14","dateProcessed":"2026-10-17","caseNo":"CAS-2768379-B6K8C5","soldTo":"176140 - HIRATA OPTICS CO, LTD","marketCode":"BUFFER","country":"JP - Japan","qty":1,"remarks":"W000276333","status":"Completed","segments":[{"status":"On Process","start":1792200307328,"end":1792200319570},{"status":"On Process","start":1792201703164,"end":1792201766364}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1792200307328-0qg97-23","dateReceived":"2026-10-14","dateProcessed":"2026-10-17","caseNo":"CAS-2768379-B6K8C5","soldTo":"1113985 - Megane no Wako Maruzen Nihombashi","marketCode":"BUFFER","country":"JP - Japan","qty":1,"remarks":"W000276334","status":"Completed","segments":[{"status":"On Process","start":1792200307328,"end":1792200319894},{"status":"On Process","start":1792201772828,"end":1792201843909}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1792200307328-28w7y-24","dateReceived":"2026-10-14","dateProcessed":"2026-10-17","caseNo":"CAS-2768379-B6K8C5","soldTo":"176026 - QUATRE SAISONS CO., LTD.","marketCode":"BUFFER","country":"JP - Japan","qty":1,"remarks":"W000276335","status":"Completed","segments":[{"status":"On Process","start":1792200307328,"end":1792200320625},{"status":"On Process","start":1792201844768,"end":1792201922551}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1792200307328-rahls-25","dateReceived":"2026-10-14","dateProcessed":"2026-10-17","caseNo":"CAS-2768379-B6K8C5","soldTo":"151488 - WAKO Co., Ltd.","marketCode":"BUFFER","country":"JP - Japan","qty":1,"remarks":"W000276336","status":"Completed","segments":[{"status":"On Process","start":1792200307328,"end":1792200320980},{"status":"On Process","start":1792201924426,"end":1792201981993}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1792200307328-44xf6-26","dateReceived":"2026-10-14","dateProcessed":"2026-10-17","caseNo":"CAS-2768379-B6K8C5","soldTo":"1101205 - Iwaki Megane Shinjuku Keio","marketCode":"BUFFER","country":"JP - Japan","qty":1,"remarks":"W000276337","status":"Completed","segments":[{"status":"On Process","start":1792200307328,"end":1792200321354},{"status":"On Process","start":1792201983189,"end":1792202058109}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1792200307328-q2pxm-27","dateReceived":"2026-10-14","dateProcessed":"2026-10-17","caseNo":"CAS-2768379-B6K8C5","soldTo":"176065 - LOCAL OPTICAL, K.K.","marketCode":"BUFFER","country":"JP - Japan","qty":1,"remarks":"W000276340","status":"Completed","segments":[{"status":"On Process","start":1792200307328,"end":1792200321755},{"status":"On Process","start":1792202059197,"end":1792202120312}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1792200307328-8hqn1-28","dateReceived":"2026-10-14","dateProcessed":"2026-10-17","caseNo":"CAS-2768379-B6K8C5","soldTo":"1100904 - JAPAN OPTICAL Nihombashi Mitsukoshi","marketCode":"BUFFER","country":"JP - Japan","qty":1,"remarks":"W000276342","status":"Completed","segments":[{"status":"On Process","start":1792200307328,"end":1792200322529},{"status":"On Process","start":1792202156699,"end":1792202244173}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1792200307328-p1tod-29","dateReceived":"2026-10-14","dateProcessed":"2026-10-17","caseNo":"CAS-2768379-B6K8C5","soldTo":"1107261 - Iwaki Megane Ginza","marketCode":"APAC","country":"JP","qty":1,"remarks":"W000279840","status":"Completed","segments":[{"status":"On Process","start":1792200307328,"end":1792200322925},{"status":"On Process","start":1793082176775,"end":1793082408628}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1793060866067-vuizl","dateReceived":"2026-10-26","dateProcessed":"2026-10-27","caseNo":"CAS-2780177-Y1F1H1","soldTo":"165469 - STARLITE VISION","marketCode":"NAM","country":"CA","qty":1,"remarks":"W000279753","status":"Completed","segments":[{"status":"On Process","start":1793060868117,"end":1793061132201}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false},{"id":"1793766938137-cqt77","dateReceived":"2026-11-04","dateProcessed":"2026-11-04","caseNo":"CAS-2803354-P1T5N3","soldTo":"1106160 - decora KOBE","marketCode":"APAC","country":"JP","qty":1,"remarks":"W000282598","status":"Completed","segments":[{"status":"On Process","start":1793766940062,"end":1793767309122}],"runningSince":null,"runningStatus":null,"onHold":false,"ptimeOverride":"","breakdownOverride":"","cancelled":false}];
+
+function showDemoToast(msg) {
+  var el = document.getElementById('demoToast');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(window.__demoToastTimer);
+  window.__demoToastTimer = setTimeout(function () { el.classList.remove('show'); }, 2800);
+}
+
+/* Blur people, accounts and case numbers on screen. The values stay in the
+   markup for layout, they are only visually masked. */
+function applyDemoPii() {
+  var names = [];
+  DEMO_ORDERS.forEach(function (o) {
+    var v = o && o.soldTo ? String(o.soldTo).trim() : '';
+    if (v.length > 2 && names.indexOf(v) === -1) names.push(v);
+  });
+  names.sort(function (a, b) { return b.length - a.length; });
+  var BS = String.fromCharCode(92);
+  var SPECIAL = '.*+?^$()[]|{}' + BS;
+  function escapeRe(str) {
+    var out = '';
+    for (var i = 0; i < str.length; i++) { out += SPECIAL.indexOf(str[i]) >= 0 ? BS + str[i] : str[i]; }
+    return out;
+  }
+  var parts = names.map(escapeRe);
+  parts.push('CAS-[A-Z0-9-]+');
+  parts.push('[A-Z]{1,2}[0-9]{7,}');
+  var re = new RegExp('(' + parts.join('|') + ')', 'g');
+  var roots = [document.querySelector('main'), document.getElementById('deleteOverlay')];
+  var nodes = [];
+  roots.forEach(function (root) {
+    if (!root || !root.querySelectorAll) return;
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (n) {
+        if (!n.nodeValue || !n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        var pe = n.parentElement;
+        if (pe && (pe.closest('.pii') || pe.closest('script') || pe.closest('style'))) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    var n; while ((n = walker.nextNode())) nodes.push(n);
+  });
+  nodes.forEach(function (n) {
+    var text = n.nodeValue;
+    re.lastIndex = 0;
+    if (!re.test(text)) return;
+    re.lastIndex = 0;
+    var frag = document.createDocumentFragment();
+    var last = 0, m;
+    while ((m = re.exec(text)) !== null) {
+      if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+      var span = document.createElement('span');
+      span.className = 'pii';
+      span.textContent = m[0];
+      frag.appendChild(span);
+      last = m.index + m[0].length;
+    }
+    if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+    n.parentNode.replaceChild(frag, n);
+  });
+}
+var __piiQueue = null;
+function scheduleDemoPii() {
+  if (__piiQueue) return;
+  __piiQueue = setTimeout(function () { __piiQueue = null; try { applyDemoPii(); } catch (e) {} }, 120);
+}
+window.addEventListener('load', scheduleDemoPii);
+setTimeout(scheduleDemoPii, 400);
+setTimeout(scheduleDemoPii, 1200);
+if (window.MutationObserver) {
+  new MutationObserver(scheduleDemoPii).observe(document.body, { childList: true, subtree: true });
+}
+</script>
+  <script>
+    /* ============================================================
+       Allocation data for Model 171039.
+       `total` = maximum units the market/country may order.
+       `splitCountries` = true when the market's total is divided
+       into individual per-country caps (shown in the dashboard's
+       country breakdown); false when countries exist only as a
+       selection list for the order form, sharing one market-wide cap.
+
+       "used" is no longer stored here — it's computed live from the
+       actual Order Requests below (see computeUsage()), so it always
+       reflects what's really been submitted.
+       ============================================================ */
+    const MARKETS = [
+      {
+        code: 'APAC', total: 259, splitCountries: true,
+        countries: [
+          { code: 'CN',   label: 'China',           total: 139 },
+          { code: 'HK',   label: 'Hong Kong',        total: 12  },
+          { code: 'KR',   label: 'Korea',            total: 26  },
+          { code: 'JP',   label: 'Japan',            total: 23  },
+          { code: 'TW',   label: 'Taiwan',           total: 6   },
+          { code: 'AU',   label: 'Australia',        total: 3   },
+          { code: 'PUYI', label: 'PUYI',             total: 50  }
+        ]
+      },
+      {
+        code: 'CC', total: 11, splitCountries: true,
+        countries: [
+          { code: 'IND', label: 'India',      total: 2 },
+          { code: 'MYS', label: 'Malaysia',   total: 1 },
+          { code: 'SGP', label: 'Singapore',  total: 8 }
+        ]
+      },
+      {
+        code: 'EU', total: 17, splitCountries: true,
+        countries: [
+          { code: 'IB', label: 'Iberia',            total: 3  },
+          { code: 'FR', label: 'France',            total: 5  },
+          { code: 'DA', label: 'DACH',              total: 8  },
+          { code: 'NE', label: 'Northern Europe',   total: 1  }
+        ]
+      },
+      {
+        code: 'NAM', total: 50, splitCountries: false,
+        // Countries exist here purely so the order form can record
+        // which one a request is for — the 50-unit cap isn't divided
+        // between them, so there's no per-country breakdown to show.
+        countries: [
+          { code: 'US', label: 'United States' },
+          { code: 'CA', label: 'Canada' }
+        ]
+      },
+      {
+        // Buffer isn't split by country at all — there's no fixed
+        // list to choose from, so the order form lets the country be
+        // typed in freely (see the inCountry combobox). `dynamicCountries`
+        // tells the dashboard to build its "View countries" breakdown
+        // live from whatever countries actually got typed into Buffer
+        // orders, instead of from a fixed list like the other markets.
+        code: 'BUFFER', total: 13, splitCountries: false, dynamicCountries: true,
+        countries: []
+      }
+    ];
+
+    /* Every country referenced anywhere in MARKETS, deduped and sorted
+       by code — this is what populates the Country combobox's
+       suggestions, dashboard-wide, formatted "CODE - Name". Buffer has
+       no fixed list of its own, so this is what gives it real
+       suggestions while still allowing any free-typed value. */
+    const ALL_COUNTRIES = (function () {
+      const seen = new Map();
+      MARKETS.forEach(m => m.countries.forEach(c => { if (!seen.has(c.code)) seen.set(c.code, c.label); }));
+      return Array.from(seen, ([code, label]) => ({ code, label })).sort((a, b) => a.code.localeCompare(b.code));
+    })();
+    function countryDatalistOptionsHtml(list) {
+      return list.map(c => '<option value="' + c.code + '">' + c.code + ' - ' + escapeHtml(c.label) + '</option>').join('');
+    }
+    // "CODE - Name" for a stored country code (Export uses this, matching
+    // the same format the Country combobox suggestions use). Falls back to
+    // whatever was stored if it isn't one of the known codes — covers
+    // Buffer's freely-typed values that may not match a fixed country.
+    function countryLabelFor(code) {
+      const found = ALL_COUNTRIES.find(c => c.code === code);
+      return found ? (found.code + ' - ' + found.label) : (code || '');
+    }
+
+    /* Sums actual Order Request quantities into per-market and
+       per-market+country totals. Waiting List entries are excluded —
+       they haven't actually been allocated a slot yet, so they
+       shouldn't count against the cap until they move to another
+       status. */
+    function computeUsage() {
+      const byMarket = {};
+      const byCountry = {};
+      orders.forEach(o => {
+        if (o.status === 'Waiting List') return;
+        const qty = Number(o.qty) || 0;
+        byMarket[o.marketCode] = (byMarket[o.marketCode] || 0) + qty;
+        if (o.country) {
+          const key = o.marketCode + '|' + o.country;
+          byCountry[key] = (byCountry[key] || 0) + qty;
+        }
+      });
+      return { byMarket, byCountry };
+    }
+
+    /* Mirrors computeUsage() but tallies the opposite set — only
+       Waiting List entries — so the dashboard can show how much
+       demand is queued up for a market/country beyond what's
+       actually been allocated. */
+    function computeWaitlist() {
+      const byMarket = {};
+      const byCountry = {};
+      orders.forEach(o => {
+        if (o.status !== 'Waiting List' || o.cancelled) return;
+        const qty = Number(o.qty) || 0;
+        byMarket[o.marketCode] = (byMarket[o.marketCode] || 0) + qty;
+        if (o.country) {
+          const key = o.marketCode + '|' + o.country;
+          byCountry[key] = (byCountry[key] || 0) + qty;
+        }
+      });
+      return { byMarket, byCountry };
+    }
+
+    function marketUsed(market, usage) {
+      return usage.byMarket[market.code] || 0;
+    }
+    function countryUsed(marketCode, countryCode, usage) {
+      return usage.byCountry[marketCode + '|' + countryCode] || 0;
+    }
+    function marketWaitlisted(market, waitlist) {
+      return waitlist.byMarket[market.code] || 0;
+    }
+    function countryWaitlisted(marketCode, countryCode, waitlist) {
+      return waitlist.byCountry[marketCode + '|' + countryCode] || 0;
+    }
+
+    /* For markets with no fixed country list (Buffer), builds the
+       breakdown live from whatever countries were actually typed into
+       that market's orders, instead of reading it off a preset list —
+       this is how the Buffer card's "View countries" panel shows where
+       the allocation actually went. Sorted by quantity, highest first. */
+    function dynamicCountryUsage(marketCode, usage) {
+      const prefix = marketCode + '|';
+      const list = Object.keys(usage.byCountry)
+        .filter(key => key.indexOf(prefix) === 0)
+        .map(key => ({ code: key.slice(prefix.length), qty: usage.byCountry[key] }));
+      list.sort((a, b) => b.qty - a.qty);
+      return list;
+    }
+
+    function statusFor(used, total) {
+      if (total <= 0) return 'normal';
+      if (used >= total) return 'full';
+      if (used / total >= 0.85) return 'near';
+      return 'normal';
+    }
+
+    const STATUS_BAR   = { normal: 'bg-wheat', near: 'bg-caution', full: 'bg-urgent' };
+    const FRACTION_TEXT = { normal: 'text-blackish', near: 'text-caution', full: 'text-urgent' };
+
+    // A small per-market identity color (used only as a subtle accent
+    // dot/top-edge, never for the utilization bar itself — that stays
+    // wheat/caution/urgent so it always reads as a status signal).
+    const MARKET_ACCENT = { APAC: '#B8926A', CC: '#92714F', EU: '#B79E8F', NAM: '#C08A3E', BUFFER: '#4C8C52' };
+
+    function countryCellHtml(country, marketCode, usage, waitlist) {
+      const used = countryUsed(marketCode, country.code, usage);
+      const status = statusFor(used, country.total);
+      const pct = Math.min(100, (used / country.total) * 100);
+      const waitlisted = countryWaitlisted(marketCode, country.code, waitlist);
+      return (
+        '<div>' +
+          '<div class="flex items-center justify-between gap-2">' +
+            '<div class="flex items-center gap-1.5 flex-wrap min-w-0">' +
+              '<span class="text-[12.5px] font-semibold text-blackish">' + country.code + '</span>' +
+              (status === 'full' ? '<span class="limit-badge">Limit reached</span>' : '') +
+            '</div>' +
+            '<span class="shrink-0 text-[13px] font-semibold tabular-nums ' + FRACTION_TEXT[status] + '">' + used + '/' + country.total + '</span>' +
+          '</div>' +
+          '<div class="h-[5px] rounded-full bg-breath overflow-hidden mt-1">' +
+            '<div class="h-full rounded-full ' + STATUS_BAR[status] + '" style="width:' + pct + '%"></div>' +
+          '</div>' +
+          '<div class="flex items-center justify-between gap-1.5 flex-wrap mt-1">' +
+            '<span class="text-[10px] text-wheat-deep">' + country.label + '</span>' +
+            (waitlisted > 0 ? '<span class="text-[10px] font-semibold text-urgent">' + waitlisted + ' waitlisted</span>' : '') +
+          '</div>' +
+        '</div>'
+      );
+    }
+
+    /* Row for the Buffer card's dynamically-built breakdown — no fixed
+       cap to show a bar against, just what's actually been typed in
+       and how much went to it. */
+    function dynamicCountryCellHtml(entry, marketTotal, accent) {
+      const pctOfMarket = marketTotal ? Math.round((entry.qty / marketTotal) * 100) : 0;
+      return (
+        '<div class="flex items-center justify-between gap-2 py-1">' +
+          '<span class="text-[12px] font-semibold text-blackish truncate">' + escapeHtml(entry.code) + '</span>' +
+          '<span class="shrink-0 text-[12.5px] font-semibold tabular-nums" style="color:' + (accent || '#92714F') + ';">' + entry.qty + ' unit' + (entry.qty === 1 ? '' : 's') + ' &middot; ' + pctOfMarket + '%</span>' +
+        '</div>'
+      );
+    }
+
+    function marketCardHtml(market, usage, waitlist, extraClass) {
+      const used = marketUsed(market, usage);
+      const status = statusFor(used, market.total);
+      const pct = Math.min(100, (used / market.total) * 100);
+      const remaining = Math.max(0, market.total - used);
+      const waitlisted = marketWaitlisted(market, waitlist);
+      const hasCountries = market.splitCountries && market.countries.length > 0;
+      const isDynamic = market.dynamicCountries === true;
+      const panelId = 'countryPanel-' + market.code;
+      const accent = MARKET_ACCENT[market.code] || '#B0B0B0';
+
+      const toggle = (hasCountries || isDynamic)
+        ? '<button type="button" data-role="toggle" data-target="' + panelId + '" ' +
+            'class="focus-ring mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-blackish hover:text-wheat-deep" ' +
+            'aria-expanded="false" aria-controls="' + panelId + '">' +
+            '<span data-role="toggleLabel">View countries</span>' +
+            '<svg class="chevron w-2.5 h-2.5" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+          '</button>'
+        : '<p class="mt-1.5 text-[10.5px] text-faint m-0 italic">Country-level split not tracked</p>';
+
+      const dynamicList = isDynamic ? dynamicCountryUsage(market.code, usage) : [];
+
+      const panel = hasCountries
+        ? '<div id="' + panelId + '" class="country-panel absolute left-0 right-0 z-30 bg-white border border-wind rounded-lg shadow-lg p-3.5 max-h-80 overflow-y-auto" data-role="panel">' +
+            '<div class="flex items-center justify-between gap-2 pb-2 mb-2.5 border-b border-breath">' +
+              '<span class="text-[9.5px] font-semibold uppercase tracking-wide text-faint">' + market.code + ' &middot; Country Breakdown</span>' +
+              '<span class="text-[10px] text-faint whitespace-nowrap">' + market.countries.length + ' countries</span>' +
+            '</div>' +
+            '<div class="grid grid-cols-2 gap-x-4 gap-y-2.5">' +
+              market.countries.map(c => countryCellHtml(c, market.code, usage, waitlist)).join('') +
+            '</div>' +
+          '</div>'
+        : (isDynamic
+          ? '<div id="' + panelId + '" class="country-panel absolute left-0 right-0 z-30 bg-white border border-wind rounded-lg shadow-lg p-3.5 max-h-80 overflow-y-auto" data-role="panel" style="border-top:2.5px solid ' + accent + ';">' +
+              '<div class="flex items-center justify-between gap-2 pb-2 mb-2.5 border-b border-breath">' +
+                '<span class="text-[9.5px] font-semibold uppercase tracking-wide" style="color:' + accent + ';">' + market.code + ' &middot; Where it went</span>' +
+                '<span class="text-[10px] text-faint whitespace-nowrap">' + dynamicList.length + ' countr' + (dynamicList.length === 1 ? 'y' : 'ies') + '</span>' +
+              '</div>' +
+              (dynamicList.length
+                ? '<div class="flex flex-col divide-y divide-breath">' + dynamicList.map(d => dynamicCountryCellHtml(d, market.total, accent)).join('') + '</div>'
+                : '<p class="text-[11px] text-faint m-0 italic">No allocations recorded yet — countries typed into Buffer order requests will show up here.</p>') +
+            '</div>'
+          : '');
+
+      return (
+        '<article class="relative lg:col-span-1 h-full bg-white border border-wind rounded-lg px-3 pt-2.5 pb-2.5 flex flex-col transition-shadow duration-150 hover:shadow-md' + (extraClass ? ' ' + extraClass : '') + '" style="border-top:2.5px solid ' + accent + ';">' +
+          '<div class="flex items-center justify-between gap-2">' +
+            '<span class="text-[9.5px] font-semibold uppercase tracking-[0.08em] text-dim">Market</span>' +
+            '<div class="flex items-center gap-1.5">' +
+              '<span class="text-[13px] font-semibold tabular-nums ' + FRACTION_TEXT[status] + '">' + used + '/' + market.total + '</span>' +
+              (waitlisted > 0 ? '<span class="waitlist-badge">' + waitlisted + ' waitlisted</span>' : '') +
+            '</div>' +
+          '</div>' +
+          '<div class="flex items-center gap-1.5 flex-wrap mt-0.5">' +
+            '<span class="w-1.5 h-1.5 rounded-full shrink-0" style="background:' + accent + ';"></span>' +
+            '<span class="text-[16px] font-semibold text-blackish leading-tight">' + market.code + '</span>' +
+            (status === 'full' ? '<span class="limit-badge">Limit reached</span>' : '') +
+          '</div>' +
+          '<div class="h-[6px] rounded-full bg-breath overflow-hidden mt-1.5">' +
+            '<div class="h-full rounded-full ' + STATUS_BAR[status] + '" style="width:' + pct + '%"></div>' +
+          '</div>' +
+          '<div class="flex items-center justify-between mt-1 text-[11px] font-semibold text-dim tabular-nums">' +
+            '<span>' + remaining + ' remaining</span>' +
+            '<span>' + Math.round(pct) + '%</span>' +
+          '</div>' +
+          toggle +
+          panel +
+        '</article>'
+      );
+    }
+
+    function render() {
+      const usage = computeUsage();
+      const waitlist = computeWaitlist();
+      const cardsEl = document.getElementById('marketCards');
+      const bufferEl = document.getElementById('bufferCard');
+
+      // Buffer gets its own card beside Total Allocation (below), so it's
+      // left out of the regular market-cards grid to avoid showing twice.
+      const gridMarkets = MARKETS.filter(m => !m.dynamicCountries);
+      const bufferMarket = MARKETS.find(m => m.dynamicCountries);
+
+      cardsEl.innerHTML = gridMarkets.map(m => marketCardHtml(m, usage, waitlist)).join('');
+      if (bufferEl && bufferMarket) {
+        bufferEl.innerHTML = marketCardHtml(bufferMarket, usage, waitlist, 'h-full');
+      }
+
+      const grandTotal = MARKETS.reduce((sum, m) => sum + m.total, 0);
+      const grandUsed = MARKETS.reduce((sum, m) => sum + marketUsed(m, usage), 0);
+      const bufferUsed = bufferMarket ? marketUsed(bufferMarket, usage) : 0;
+      const baseUsedPct = Math.min(100, ((grandUsed - bufferUsed) / grandTotal) * 100);
+      const bufferUsedPct = Math.min(100 - baseUsedPct, (bufferUsed / grandTotal) * 100);
+      const grandPct = Math.min(100, (grandUsed / grandTotal) * 100);
+
+      const grandTotalLabelEl = document.getElementById('grandTotalLabel');
+      if (grandTotalLabelEl) grandTotalLabelEl.textContent = grandTotal;
+      document.getElementById('grandBarBase').style.width = baseUsedPct + '%';
+      document.getElementById('grandBarBuffer').style.width = bufferUsedPct + '%';
+      document.getElementById('grandPctLabel').textContent = Math.round(grandPct) + '% used';
+      document.getElementById('grandUsedLabel').textContent = grandUsed + ' used';
+      document.getElementById('grandRemainingLabel').textContent = (grandTotal - grandUsed) + ' remaining';
+      const bufferUsedLabelEl = document.getElementById('grandBufferUsedLabel');
+      if (bufferUsedLabelEl) bufferUsedLabelEl.textContent = bufferUsed > 0 ? bufferUsed + ' from Buffer' : '';
+
+      document.querySelectorAll('[data-role="toggle"]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const panel = document.getElementById(btn.dataset.target);
+          const willOpen = !panel.classList.contains('is-open');
+          closeAllCountryPanels(willOpen ? panel : null);
+          setCountryPanelState(btn, panel, willOpen);
+        });
+      });
+      document.querySelectorAll('[data-role="panel"]').forEach(panel => {
+        panel.addEventListener('click', (e) => e.stopPropagation());
+      });
+    }
+
+    function setCountryPanelState(btn, panel, isOpen) {
+      panel.classList.toggle('is-open', isOpen);
+      btn.querySelector('.chevron').classList.toggle('is-open', isOpen);
+      btn.setAttribute('aria-expanded', String(isOpen));
+      btn.querySelector('[data-role="toggleLabel"]').textContent = isOpen ? 'Hide countries' : 'View countries';
+    }
+
+    function closeAllCountryPanels(except) {
+      document.querySelectorAll('[data-role="panel"]').forEach(panel => {
+        if (panel === except) return;
+        const btn = document.querySelector('[data-target="' + panel.id + '"]');
+        if (btn) setCountryPanelState(btn, panel, false);
+      });
+    }
+    document.addEventListener('click', () => closeAllCountryPanels(null));
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAllCountryPanels(null); });
+
+    /* ============================================================
+       Order Requests — tabs swap which panel is visible; the actual
+       row data/rendering lives in the block below.
+       ============================================================ */
+    const orderTabs = Array.from(document.querySelectorAll('.view-tab'));
+    orderTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        orderTabs.forEach(t => {
+          const isActive = t === tab;
+          t.classList.toggle('active', isActive);
+          t.setAttribute('aria-selected', String(isActive));
+          const panel = document.getElementById(t.getAttribute('aria-controls'));
+          if (panel) panel.classList.toggle('hidden', !isActive);
+        });
+      });
+    });
+
+    /* ============================================================
+       Order Requests — data, form, search, tabs, toggle, pause.
+
+       Storage: in the shipped demo this runs entirely in memory for
+       the page view, so nothing is written to this browser and nothing
+       leaves the page.
+
+       Status → tab mapping: "Pending Request" covers both On Process
+       and With Clarification (still active, not yet resolved either
+       way); Completed and Waiting List each get their own tab.
+       ============================================================ */
+    const ORDERS_KEY = 'goatFramesOrders_v1';
+    const DATA_ENDPOINT = '/api/data/goat-frames-tracker';
+    const STATUS_LIST = ['On Process', 'With Clarification', 'Waiting List', 'Completed'];
+    /* Inline pill colors, lifted straight from Manual Typing's palette
+       (wheat = in-progress, dusty-rose = with clarification, sage =
+       completed); Waiting List gets a plain wind-based neutral tint
+       following that same recipe since it isn't in the source page. */
+    const STATUS_META = {
+      'On Process':         { bg: 'rgba(184, 146, 106, 0.25)', text: '#2D2D2B' },
+      'With Clarification': { bg: 'rgba(212, 200, 190, 0.55)', text: '#2D2D2B' },
+      'Waiting List':       { bg: 'rgba(161, 76, 76, 0.18)',   text: '#A14C4C' },
+      'Completed':          { bg: '#C3D3BC',                   text: '#2D2D2B' }
+    };
+    /* Only these two statuses run the live clock — matches Manual
+       Typing's "In Progress" + "With Clarification" both counting as
+       active work. Waiting List behaves like Completed: the case
+       isn't being worked on, so the clock simply isn't running (and
+       can't be held/resumed either — there's nothing to pause). */
+    const TRACKED_STATUSES = ['On Process', 'With Clarification'];
+    // Labels used only in the Break Down display/export — same two
+    // statuses that accumulate processing-time segments (see below).
+    const BREAKDOWN_LABELS = { 'On Process': 'On Process', 'With Clarification': 'With Clarification' };
+    const TAB_STATUSES = {
+      pending:   ['On Process', 'With Clarification'],
+      completed: ['Completed'],
+      waiting:   ['Waiting List']
+    };
+
+    let orders = [];
+    let orderSearchQuery = '';
+    let showPtime = false;
+    let ptimeInterval = null;
+    // Permissions from the access check — optimistic defaults (full edit,
+    // export hidden) until the server actually answers, matching the
+    let isEditor = true;
+    let canExtract = false;
+    // Set right after a new entry is pushed, read once by the next
+    // render to animate only that row in, then cleared — see row-enter.
+    let justAddedOrderId = null;
+
+    /* ---------- Storage: in the demo everything stays in memory for
+       this page view only. ---------- */
+    /* Demo build: state lives in memory for this page view only. */
+    function loadOrdersLocal() { return []; }
+    function saveOrdersLocal() { /* no storage in the demo */ }
+
+    async function loadOrders() {
+      // Demo build: the snapshot is inlined; nothing is fetched.
+      return DEMO_ORDERS.map(function (o) {
+        var copy = Object.assign({}, o);
+        copy.segments = Array.isArray(o.segments) ? o.segments.map(function (sg) { return Object.assign({}, sg); }) : [];
+        return copy;
+      });
+    }
+
+    /* The demo always runs as a full editor in this browser, with no
+       server round trip and no shared access script. */
+    async function fetchWhoAmI() {
+      // Demo build: always a full editor in the browser, no server check.
+      return { isEditor: true, canExtract: true };
+    }
+
+    function setFormEditable(editable) {
+      ['inDateReceived', 'inDateProcessed', 'inCaseNo', 'inSoldTo', 'inMarket', 'inCountry', 'inQty', 'inRemarks', 'orderSubmitBtn', 'importBtn']
+        .forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.disabled = !editable;
+        });
+    }
+
+    function setServerStatus(message, isWarning) {
+      const el = document.getElementById('serverStatus');
+      if (!el) return;
+      el.textContent = message || '';
+      el.classList.toggle('text-urgent', !!isWarning);
+      el.classList.toggle('text-faint', !isWarning);
+    }
+
+    function saveOrders() {
+      // Demo build: keep changes for this page view only, say so plainly.
+      setServerStatus('Demo mode \u2014 changes aren\'t saved', true);
+      showDemoToast('Demo mode - changes aren\'t saved');
+    }
+
+    /* ---------- Live processing-time clock (adopted from Manual Typing) ----------
+       Each order accumulates closed segments ({status, start, end}) in
+       order.segments, plus a currently-running segment tracked via
+       order.runningSince / order.runningStatus. Changing the status
+       select closes the segment running under the old status and opens
+       a new one under the new status (unless the new status isn't
+       tracked, or the order is on Hold). The Hold button is separate
+       from status: it freezes the clock without recording a segment
+       for the held time, so held time never counts toward Processing
+       Time — resuming picks back up under whatever status is set. */
+    function closeRunningSegment(order, now) {
+      if (order.runningSince) {
+        order.segments.push({ status: order.runningStatus, start: order.runningSince, end: now });
+        order.runningSince = null;
+        order.runningStatus = null;
+      }
+    }
+    function liveSegments(order) {
+      const segs = order.segments.slice();
+      if (order.runningSince) segs.push({ status: order.runningStatus, start: order.runningSince, end: demoNow() });
+      return segs;
+    }
+    function entryElapsedMs(order) {
+      return liveSegments(order).reduce((sum, s) => sum + Math.max(0, s.end - s.start), 0);
+    }
+    function formatDuration(ms) {
+      if (!ms || ms < 0) ms = 0;
+      const totalSec = Math.floor(ms / 1000);
+      const days = Math.floor(totalSec / 86400);
+      const hours = Math.floor((totalSec % 86400) / 3600);
+      const mins = Math.floor((totalSec % 3600) / 60);
+      const secs = totalSec % 60;
+      const pad = n => String(n).padStart(2, '0');
+      return (days > 0 ? days + 'd ' : '') + pad(hours) + ':' + pad(mins) + ':' + pad(secs);
+    }
+
+    /* ---------- Break Down (adopted from Manual Typing) ----------
+       Sums the same closed segments Processing Time uses, but grouped
+       by calendar date and then by status within that date, so work
+       that resumes on a later day shows up as its own date group. */
+    function formatSegDate(ts) {
+      return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+    function groupedBreakdown(order) {
+      const segments = liveSegments(order).filter(s => BREAKDOWN_LABELS[s.status]);
+      const dateOrder = [];
+      const byDate = {};
+      segments.forEach(s => {
+        const dateKey = formatSegDate(s.start);
+        if (!byDate[dateKey]) { byDate[dateKey] = {}; dateOrder.push(dateKey); }
+        const label = BREAKDOWN_LABELS[s.status];
+        byDate[dateKey][label] = (byDate[dateKey][label] || 0) + Math.max(0, s.end - s.start);
+      });
+      return dateOrder.map(dateKey => ({ dateKey, parts: Object.entries(byDate[dateKey]) }));
+    }
+    function entryBreakdownHtml(order) {
+      const groups = groupedBreakdown(order);
+      if (!groups.length) return '<span class="bd-empty">&mdash;</span>';
+      const lines = groups.map(g => '<span class="bd-date">' + escapeHtml(g.dateKey) + '</span>' +
+        g.parts.map(([label, ms]) => '<br><span class="bd-part">' + escapeHtml(label) + ' ' + formatDuration(ms) + '</span>').join(''));
+      return lines.join('<br>');
+    }
+    function entryBreakdownText(order) {
+      const groups = groupedBreakdown(order);
+      if (!groups.length) return '';
+      return groups.map(g => g.dateKey + ': ' +
+        g.parts.map(([label, ms]) => label + ' ' + formatDuration(ms)).join(', ')).join(' | ');
+    }
+    function entryBreakdownEditText(order) {
+      const groups = groupedBreakdown(order);
+      if (!groups.length) return '';
+      return groups.map(g => g.dateKey + '\n' +
+        g.parts.map(([label, ms]) => label + ' ' + formatDuration(ms)).join('\n')).join('\n');
+    }
+    function formatBreakdownLines(text) {
+      const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+      if (!lines.length) return '<span class="bd-empty">&mdash;</span>';
+      return lines.map(line => {
+        const isPart = /\d{1,2}:\d{2}(:\d{2})?/.test(line);
+        return isPart
+          ? '<span class="bd-part">' + escapeHtml(line) + '</span>'
+          : '<span class="bd-date">' + escapeHtml(line) + '</span>';
+      }).join('<br>');
+    }
+    function breakdownCellHtml(order) {
+      if (order.breakdownOverride) {
+        return '<span class="js-breakdown" data-id="' + order.id + '">' + formatBreakdownLines(order.breakdownOverride) + '</span>';
+      }
+      return '<span class="js-breakdown" data-id="' + order.id + '">' + entryBreakdownHtml(order) + '</span>';
+    }
+    function parseDurationToken(token) {
+      const match = String(token).trim().match(/(?:(\d+)\s*d\s+)?(\d{1,2}):(\d{2})(?::(\d{2}))?\s*$/i);
+      if (!match) return null;
+      const days = match[1] ? Number(match[1]) : 0;
+      const hours = Number(match[2]);
+      const mins = Number(match[3]);
+      const secs = match[4] != null ? Number(match[4]) : 0;
+      return ((days * 24 + hours) * 3600 + mins * 60 + secs) * 1000;
+    }
+    function parseBreakdownDurationMs(text) {
+      if (!text) return null;
+      const lines = String(text).split('\n').map(l => l.trim()).filter(Boolean);
+      let total = 0, matched = false;
+      lines.forEach(line => {
+        if (!/\d{1,2}:\d{2}(:\d{2})?/.test(line)) return;
+        const ms = parseDurationToken(line);
+        if (ms != null) { total += ms; matched = true; }
+      });
+      return matched ? total : null;
+    }
+
+    /* ---------- Market dropdown / Country combobox ----------
+       Country is a text input with a <datalist> of suggestions rather
+       than a plain <select> — so it still accepts a free-typed value —
+       but the suggestions themselves are narrowed to whichever market is
+       currently selected (see refreshCountryOptions), not every country
+       tracked dashboard-wide. Buffer has no fixed country list of its own
+       (per MARKETS' dynamicCountries flag), so it gets no suggestions at
+       all — just a plain free-text box for typing a real country. */
+    const inMarket = document.getElementById('inMarket');
+    const inCountry = document.getElementById('inCountry');
+    const inCountryList = document.getElementById('inCountryList');
+
+    inMarket.innerHTML = '<option value="" disabled selected hidden>Select\u2026</option>' +
+      MARKETS.map(m => '<option value="' + m.code + '">' + m.code + '</option>').join('');
+
+    // Kept for the per-row <select> in the Order Requests table below
+    // (still used for markets with a fixed country list).
+    function countryOptionsHtml(marketCode, selectedCountry) {
+      const market = MARKETS.find(m => m.code === marketCode);
+      if (!market || !market.countries.length) return '';
+      return market.countries
+        .map(c => '<option value="' + c.code + '"' + (c.code === selectedCountry ? ' selected' : '') + '>' + c.code + ' - ' + c.label + '</option>')
+        .join('');
+    }
+    function refreshCountryOptions() {
+      const market = MARKETS.find(m => m.code === inMarket.value);
+      inCountry.disabled = false;
+      if (market && market.countries.length) {
+        // Fixed-list market — narrow the dropdown to just its own
+        // countries, so picking one is a couple of keystrokes instead of
+        // scrolling through every country on the dashboard.
+        inCountryList.innerHTML = countryDatalistOptionsHtml(market.countries);
+        inCountry.value = '';
+        inCountry.placeholder = 'Country';
+      } else {
+        // Buffer (dynamicCountries) has no fixed list of its own, so
+        // there's nothing meaningful to suggest — leave it a plain
+        // free-text box with no dropdown at all.
+        inCountryList.innerHTML = '';
+        inCountry.value = '';
+        inCountry.placeholder = market && market.dynamicCountries ? 'Type a country\u2026' : 'Country';
+      }
+    }
+    inMarket.addEventListener('change', () => { refreshCountryOptions(); checkAllocationWarning(); });
+    inCountry.addEventListener('input', checkAllocationWarning);
+    document.getElementById('inQty').addEventListener('input', checkAllocationWarning);
+    refreshCountryOptions();
+
+    /* ---------- Live allocation warning ----------
+       Flags, right inside the entry form, when the market/country
+       about to be submitted has already reached (or would be pushed
+       past) its allocation cap. This never blocks submission — it's
+       a heads-up, not a hard stop. */
+    function checkAllocationWarning() {
+      const warningEl = document.getElementById('allocationWarning');
+      const warningText = document.getElementById('allocationWarningText');
+      const marketCode = inMarket.value;
+      const market = MARKETS.find(m => m.code === marketCode);
+      const country = market && (market.countries.length || market.dynamicCountries) ? inCountry.value.trim() : '';
+      const qty = Number(document.getElementById('inQty').value) || 0;
+
+      const capInfo = allocationCapFor(marketCode, country);
+      if (!capInfo || qty <= 0) { warningEl.classList.add('hidden'); return; }
+
+      const currentUsed = usageFor(marketCode, country, computeUsage());
+      const projected = currentUsed + qty;
+
+      if (projected >= capInfo.cap) {
+        const over = projected - capInfo.cap;
+        warningText.textContent = capInfo.label + ' is already at ' + currentUsed + '/' + capInfo.cap +
+          ' \u2014 this request ' + (over > 0 ? 'would exceed the limit by ' + over + ' unit' + (over === 1 ? '' : 's') : 'would reach the limit exactly') + '.';
+        warningEl.classList.remove('hidden');
+      } else {
+        warningEl.classList.add('hidden');
+      }
+    }
+
+    /* ---------- Add entry form ---------- */
+    const orderForm = document.getElementById('orderForm');
+    const orderFormError = document.getElementById('orderFormError');
+
+    orderForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!isEditor) {
+        orderFormError.textContent = 'You have view-only access on this server and can\'t add entries.';
+        return;
+      }
+
+      const dateReceived = document.getElementById('inDateReceived').value;
+      const dateProcessed = document.getElementById('inDateProcessed').value;
+      const caseNo = document.getElementById('inCaseNo').value.trim().slice(0, 25);
+      const soldTo = document.getElementById('inSoldTo').value.trim();
+      const marketCode = inMarket.value;
+      const market = MARKETS.find(m => m.code === marketCode);
+      const country = market && (market.countries.length || market.dynamicCountries) ? inCountry.value.trim() : '';
+      const qty = Number(document.getElementById('inQty').value);
+      const remarks = document.getElementById('inRemarks').value.trim();
+
+      if (!dateReceived || !caseNo || !soldTo || !marketCode || (market && market.countries.length && !country) || !qty || qty < 1) {
+        orderFormError.textContent = 'Please fill in Date Received, Case No., Sold-To Account, Market, Country and a valid Quantity.';
+        return;
+      }
+      orderFormError.textContent = '';
+
+      const now = demoNow();
+      const newId = demoNow() + '-' + Math.random().toString(36).slice(2, 7);
+      orders.push({
+        id: newId,
+        dateReceived, dateProcessed, caseNo, soldTo, marketCode, country, qty, remarks,
+        status: 'On Process',
+        segments: [],
+        runningSince: null,
+        runningStatus: 'On Process',
+        onHold: true,
+        ptimeOverride: '',
+        breakdownOverride: '',
+        cancelled: false
+      });
+      justAddedOrderId = newId;
+      saveOrders();
+      renderOrders();
+
+      orderForm.reset();
+      refreshCountryOptions();
+      checkAllocationWarning();
+      document.getElementById('inDateReceived').focus();
+    });
+
+    /* ---------- Search ---------- */
+    const orderSearchInput = document.getElementById('orderSearchInput');
+    const orderResultCount = document.getElementById('orderResultCount');
+    orderSearchInput.addEventListener('input', () => {
+      orderSearchQuery = orderSearchInput.value.trim().toLowerCase();
+      renderOrders();
+    });
+    function matchesOrderSearch(order) {
+      if (!orderSearchQuery) return true;
+      const haystack = [
+        order.dateReceived, order.dateProcessed, order.caseNo, order.soldTo,
+        order.marketCode, order.country, order.qty, order.remarks, order.status
+      ].join(' ').toLowerCase();
+      return haystack.includes(orderSearchQuery);
+    }
+
+    /* ---------- Show Processing Time toggle + live ticker ---------- */
+    const ptimeToggleBtn = document.getElementById('ptimeToggleBtn');
+    const ptimeSwitchLabel = document.getElementById('ptimeSwitchLabel');
+
+    function updateAllPtimeDisplays() {
+      document.querySelectorAll('.js-ptime').forEach(el => {
+        const order = orders.find(o => o.id === el.dataset.id);
+        // A manual override is left alone — otherwise the once-a-second
+        // tick would overwrite it right after it's typed in.
+        if (order && !order.ptimeOverride) el.textContent = formatDuration(entryElapsedMs(order));
+      });
+      document.querySelectorAll('.js-breakdown').forEach(el => {
+        const order = orders.find(o => o.id === el.dataset.id);
+        if (order && !order.breakdownOverride) el.innerHTML = entryBreakdownHtml(order);
+      });
+    }
+    function startPtimeTicker() { stopPtimeTicker(); ptimeInterval = setInterval(updateAllPtimeDisplays, 1000); }
+    function stopPtimeTicker() { if (ptimeInterval) { clearInterval(ptimeInterval); ptimeInterval = null; } }
+
+    function setPtimeVisible(visible) {
+      showPtime = visible;
+      ptimeToggleBtn.classList.toggle('on', visible);
+      ptimeToggleBtn.setAttribute('aria-checked', String(visible));
+      ptimeSwitchLabel.textContent = visible ? 'Processing Time on' : 'Processing Time';
+      renderOrders();
+      if (visible) { updateAllPtimeDisplays(); startPtimeTicker(); } else { stopPtimeTicker(); }
+    }
+    ptimeToggleBtn.addEventListener('click', () => setPtimeVisible(!showPtime));
+
+    /* Mirrors the layout of GOAT_Frames_Tracker_Structure.xlsx (the
+       reference template): one sheet, laid out like the page itself —
+       title, allocation summary, per-market stats + country breakdown,
+       then a single Order Requests table (every order, every status,
+       including Waiting List and crossed-out entries) with a status-
+       structure legend at the end. Two columns beyond the template's
+       own header row (Processing Time, Cancelled) so nothing on the
+       page is left out of the export.
+       Uses xlsx-js-style (a community fork of SheetJS) instead of
+       plain SheetJS specifically because the free/community build of
+       SheetJS itself cannot write bold text or cell fills — this fork
+       adds a `s` (style) property per cell that actually persists, so
+       the section bands, table header, and status colors below render
+       for real when the file is opened, not just as plain text rows. */
+    /* Export / import are switched off in the demo. */
+    function exportToExcel() { showDemoToast('Export is turned off in the demo'); }
+    function scheduleExcelSync() { /* no spreadsheet sync in the demo */ }
+    document.getElementById('exportBtn').addEventListener('click', exportToExcel);
+    var demoImportBtn = document.getElementById('importBtn');
+    if (demoImportBtn) demoImportBtn.addEventListener('click', function () { showDemoToast('Import is turned off in the demo'); });
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str || '';
+      return div.innerHTML;
+    }
+
+    /* ---------- Delete confirmation ---------- */
+    const deleteOverlay = document.getElementById('deleteOverlay');
+    const deleteModalBody = document.getElementById('deleteModalBody');
+    const deleteCancelBtn = document.getElementById('deleteCancelBtn');
+    const deleteConfirmBtn = document.getElementById('deleteConfirmBtn');
+    let pendingDeleteId = null;
+
+    function describeOrder(order) {
+      const bits = [];
+      if (order.caseNo) bits.push(order.caseNo);
+      if (order.soldTo) bits.push(order.soldTo);
+      if (order.marketCode) bits.push(order.marketCode);
+      return bits.length ? bits.join(' \u2014 ') : 'this entry';
+    }
+
+    function openDeleteModal(id) {
+      pendingDeleteId = id;
+      const order = orders.find(o => o.id === id);
+      deleteModalBody.innerHTML = order
+        ? 'You&rsquo;re about to delete <strong>' + escapeHtml(describeOrder(order)) + '</strong>. This can&rsquo;t be undone.'
+        : 'This can&rsquo;t be undone once deleted.';
+      deleteOverlay.classList.add('show');
+      deleteConfirmBtn.focus();
+    }
+
+    function closeDeleteModal() {
+      deleteOverlay.classList.remove('show');
+      pendingDeleteId = null;
+    }
+
+    deleteCancelBtn.addEventListener('click', closeDeleteModal);
+    deleteOverlay.addEventListener('click', (e) => {
+      if (e.target === deleteOverlay) closeDeleteModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && deleteOverlay.classList.contains('show')) closeDeleteModal();
+    });
+
+    deleteConfirmBtn.addEventListener('click', () => {
+      if (pendingDeleteId === null) return;
+      orders = orders.filter(o => o.id !== pendingDeleteId);
+      saveOrders();
+      renderOrders();
+      closeDeleteModal();
+    });
+
+    function editableTd(order, field, opts) {
+      opts = opts || {};
+      const value = order[field];
+      const shown = (value === '' || value == null) ? '&mdash;' : escapeHtml(String(value));
+      return '<td class="editable-cell py-2.5 pr-4 whitespace-nowrap ' + (opts.extraClass || '') + '" ' +
+        'data-role="editable" data-id="' + order.id + '" data-field="' + field + '" data-type="' + (opts.type || 'text') + '" ' +
+        'title="Double-click to edit">' + shown + '</td>';
+    }
+
+    function marketSelectHtml(order) {
+      return '<select data-role="marketSelect" data-id="' + order.id + '" class="plain-select"' + (isEditor ? '' : ' disabled') + '>' +
+        MARKETS.map(m => '<option value="' + m.code + '"' + (m.code === order.marketCode ? ' selected' : '') + '>' + m.code + '</option>').join('') +
+        '</select>';
+    }
+    function countrySelectHtml(order) {
+      const market = MARKETS.find(m => m.code === order.marketCode);
+      if (!market) return '<span class="text-dim">&mdash;</span>';
+      if (market.countries.length) {
+        return '<select data-role="countrySelect" data-id="' + order.id + '" class="plain-select"' + (isEditor ? '' : ' disabled') + '>' +
+          countryOptionsHtml(order.marketCode, order.country) +
+          '</select>';
+      }
+      if (market.dynamicCountries) {
+        // Buffer: plain free-text box, no dropdown — there's no fixed
+        // country list for it, so there's nothing meaningful to suggest.
+        return '<input type="text" data-role="countryInput" data-id="' + order.id + '" ' +
+          'class="plain-select" placeholder="Type a country\u2026" autocomplete="off" value="' + escapeHtml(order.country || '') + '"' + (isEditor ? '' : ' disabled') + '>';
+      }
+      return '<span class="text-dim">&mdash;</span>';
+    }
+    function statusSelectHtml(order) {
+      const meta = STATUS_META[order.status] || STATUS_META['On Process'];
+      return '<select data-role="statusSelect" data-id="' + order.id + '" class="status-select"' + (isEditor ? '' : ' disabled') + ' ' +
+        'style="background-color:' + meta.bg + ';color:' + meta.text + ';">' +
+        STATUS_LIST.map(s => '<option value="' + s + '"' + (s === order.status ? ' selected' : '') + '>' + s + '</option>').join('') +
+        '</select>';
+    }
+    function holdBtnHtml(order) {
+      const disabled = !isEditor || !TRACKED_STATUSES.includes(order.status);
+      return '<button type="button" data-role="holdBtn" data-id="' + order.id + '" class="hold-btn' + (order.onHold ? ' is-held' : '') + '" ' +
+        'title="' + (order.onHold ? 'Resume' : 'Hold') + '"' + (disabled ? ' disabled' : '') + '>' + (order.onHold ? '\u25B6' : '\u23F8') + '</button>';
+    }
+    /* Waiting List only: crosses the entry out instead of deleting it —
+       it stays visible (struck through, dimmed) but its quantity stops
+       counting toward the dashboard's waitlisted totals and the tab's
+       entry count. Click again to restore it. */
+    function crossOutBtnHtml(order) {
+      const active = !!order.cancelled;
+      return '<button type="button" data-role="crossOutBtn" data-id="' + order.id + '" class="hold-btn cross-btn' + (active ? ' is-crossed' : '') + '"' + (isEditor ? '' : ' disabled') + ' ' +
+        'title="' + (active ? 'Restore this entry' : 'Cross out (cancel without deleting)') + '">' +
+        '<svg viewBox="0 0 16 16" width="10" height="10" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M4.7 4.7l6.6 6.6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>' +
+        '</button>';
+    }
+    function ptimeCellHtml(order) {
+      const value = order.ptimeOverride || formatDuration(entryElapsedMs(order));
+      return '<span class="js-ptime" data-id="' + order.id + '" style="font-variant-numeric: tabular-nums; font-weight: 600;">' + escapeHtml(value) + '</span>';
+    }
+
+    /* ---------- Allocation cap lookups (shared by the live form
+       warning and the per-row flag) ---------- */
+    function allocationCapFor(marketCode, countryCode) {
+      const market = MARKETS.find(m => m.code === marketCode);
+      if (!market) return null;
+      if (market.splitCountries) {
+        const country = market.countries.find(c => c.code === countryCode);
+        return country ? { cap: country.total, label: countryCode, usedKey: marketCode + '|' + countryCode } : null;
+      }
+      return { cap: market.total, label: marketCode, usedKey: null };
+    }
+    function usageFor(marketCode, countryCode, usage) {
+      const market = MARKETS.find(m => m.code === marketCode);
+      if (!market) return 0;
+      return market.splitCountries ? countryUsed(marketCode, countryCode, usage) : marketUsed(market, usage);
+    }
+    /* Only the most recently added entry for a given market/country
+       gets the "Limit reached" badge — once a newer entry for that
+       same country exists, the older one loses the badge even if the
+       group is still over its cap, so the flag always points at the
+       entry that's actually current. Unlike the dashboard (which
+       flags at-or-over), this only fires once an entry has actually
+       pushed the total past the cap — reaching it exactly isn't
+       flagged here. */
+    /* Flags every entry, in a market/country group, whose own running
+       cumulative total (summing that group's quantities in the order
+       they were entered, up to and including this entry) actually
+       exceeds the cap — not just the newest entry. So once a group
+       tips over its cap, every entry from that point on stays
+       flagged, while earlier entries that still fit within the cap
+       do not. Reaching the cap exactly (not exceeding it) is never
+       flagged here. */
+    function limitReachedNoteHtml(order) {
+      if (order.status === 'Waiting List') return '';
+      const capInfo = allocationCapFor(order.marketCode, order.country);
+      if (!capInfo) return '';
+      const market = MARKETS.find(m => m.code === order.marketCode);
+      const sameGroup = orders.filter(o =>
+        o.status !== 'Waiting List' &&
+        o.marketCode === order.marketCode &&
+        (market.splitCountries ? o.country === order.country : true)
+      );
+      let running = 0;
+      for (const o of sameGroup) {
+        running += Number(o.qty) || 0;
+        if (o.id === order.id) break;
+      }
+      if (running <= capInfo.cap) return '';
+      return '<span class="limit-badge">Limit exceeded</span>';
+    }
+
+    function orderRowHtml(order) {
+      const secondBtn = order.status === 'Waiting List' ? crossOutBtnHtml(order) : holdBtnHtml(order);
+      const rowClass = (order.cancelled ? 'is-cancelled ' : '') + (order.id === justAddedOrderId ? 'row-enter' : '');
+      return (
+        '<tr class="' + rowClass + '">' +
+          editableTd(order, 'dateReceived', { type: 'date' }) +
+          editableTd(order, 'dateProcessed', { type: 'date' }) +
+          editableTd(order, 'caseNo', { type: 'text', extraClass: 'font-semibold text-blackish' }) +
+          editableTd(order, 'soldTo', { type: 'text' }) +
+          '<td class="py-2.5 pr-1">' + marketSelectHtml(order) + '</td>' +
+          '<td class="py-2.5 pr-2" style="overflow: visible;">' +
+            '<div class="flex items-center gap-1.5">' +
+              '<div class="flex-1 min-w-0">' + countrySelectHtml(order) + '</div>' +
+              limitReachedNoteHtml(order) +
+            '</div>' +
+          '</td>' +
+          editableTd(order, 'qty', { type: 'number', extraClass: 'text-right' }) +
+          '<td class="py-2.5 pr-2"><div class="flex items-center gap-1.5">' + statusSelectHtml(order) + secondBtn + '</div></td>' +
+          editableTd(order, 'remarks', { type: 'text', extraClass: 'text-dim' }) +
+          (showPtime ? '<td class="py-2.5 pr-2" data-role="ptimeCell" data-id="' + order.id + '" title="Double-click to override">' + ptimeCellHtml(order) + '</td>' : '') +
+          (showPtime ? '<td class="py-2.5 pr-2" data-role="breakdownCell" data-id="' + order.id + '" title="Double-click to override">' + breakdownCellHtml(order) + '</td>' : '') +
+          '<td class="py-2.5 text-right pr-2">' +
+            '<button type="button" data-role="deleteOrder" data-id="' + order.id + '" class="entry-delete-btn focus-ring" title="Remove"' + (isEditor ? '' : ' disabled') + '>&times;</button>' +
+          '</td>' +
+        '</tr>'
+      );
+    }
+
+    function orderColgroupHtml() {
+      // Date Received, Date Processed, Case No., Sold-To Account, Market,
+      // Country, Qty, Status, Remarks — sized so a real Case No. (e.g.
+      // "CAS-2708551-J0G0K0") and a full Sold-To Account (e.g. "721493344
+      // - OUNDA GmbH c/o Wolf Optik (76001)") both fit without truncating.
+      // Market stays tight; Country is wide enough that the "Limit
+      // exceeded" badge sits on the same line as the dropdown, to its
+      // right, instead of wrapping underneath it.
+      const widths = [100, 100, 175, 360, 68, 250, 56, 190, 180];
+      if (showPtime) widths.push(112);
+      if (showPtime) widths.push(190);
+      widths.push(44);
+      return '<colgroup>' + widths.map(w => '<col style="width:' + w + 'px;">').join('') + '</colgroup>';
+    }
+
+    function panelTableHtml(tabKey, rows) {
+      const headers = ['Date Received', 'Date Processed', 'Case No.', 'Sold-To Account', 'Market', 'Country', 'Qty', 'Status', 'Remarks'];
+      if (showPtime) headers.push('Processing Time');
+      if (showPtime) headers.push('Break Down');
+      headers.push('');
+
+      if (!rows.length) {
+        return (
+          '<div class="flex flex-col items-center gap-2 py-12 text-center">' +
+            '<div class="w-9 h-9 rounded-full bg-breath flex items-center justify-center text-faint">' +
+              '<svg viewBox="0 0 16 16" class="w-4 h-4" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="3.5" width="12" height="9.5" rx="1.3" stroke="currentColor" stroke-width="1.2"/><path d="M2 6.5h12" stroke="currentColor" stroke-width="1.2"/></svg>' +
+            '</div>' +
+            '<p class="text-[13px] text-faint m-0">' + (orderSearchQuery ? 'No entries match your search.' : 'No entries yet.') + '</p>' +
+          '</div>'
+        );
+      }
+
+      return (
+        '<div class="entries-box">' +
+          '<table class="order-table w-full text-left text-[13px]">' +
+            orderColgroupHtml() +
+            '<thead><tr class="sticky top-0 z-10 bg-dusty-rose text-[11px] font-semibold text-blackish">' +
+              headers.map(h => '<th class="py-2.5 pr-2 pl-4 first:pl-4">' + h + '</th>').join('') +
+            '</tr></thead>' +
+            '<tbody>' + rows.map(orderRowHtml).join('') + '</tbody>' +
+          '</table>' +
+        '</div>'
+      );
+    }
+
+    function renderOrders() {
+      const filtered = orders.filter(matchesOrderSearch);
+      Object.keys(TAB_STATUSES).forEach(tabKey => {
+        const panelEl = document.getElementById('panel-' + tabKey);
+        // Rebuilding the panel's innerHTML below replaces the scrollable
+        // .entries-box with a brand-new element, which would otherwise
+        // silently reset its scroll position back to the top on every
+        // single change (e.g. clicking Hold on one row) — capture it
+        // first and restore it after.
+        const oldBox = panelEl.querySelector('.entries-box');
+        const scrollTop = oldBox ? oldBox.scrollTop : 0;
+        const scrollLeft = oldBox ? oldBox.scrollLeft : 0;
+
+        const rows = filtered.filter(o => TAB_STATUSES[tabKey].includes(o.status));
+        panelEl.innerHTML = panelTableHtml(tabKey, rows);
+
+        const newBox = panelEl.querySelector('.entries-box');
+        if (newBox) { newBox.scrollTop = scrollTop; newBox.scrollLeft = scrollLeft; }
+
+        const countEl = document.querySelector('[data-tab-count="' + tabKey + '"]');
+        // Crossed-out entries stay visible in the Waiting List tab (rows
+        // above still includes them) but don't count toward the tab's
+        // number — this is a count of entries, never quantity.
+        if (countEl) countEl.textContent = String(rows.filter(o => !o.cancelled).length);
+      });
+      justAddedOrderId = null;
+
+      orderResultCount.textContent = orderSearchQuery
+        ? filtered.length + ' of ' + orders.length + ' entries'
+        : orders.length + (orders.length === 1 ? ' entry' : ' entries');
+
+      /* ---- generic double-click-to-edit for plain cells ---- */
+      document.querySelectorAll('[data-role="editable"]').forEach(cell => {
+        cell.addEventListener('dblclick', () => {
+          if (!isEditor) return;
+          const order = orders.find(o => o.id === cell.dataset.id);
+          if (!order) return;
+          const field = cell.dataset.field;
+          const type = cell.dataset.type;
+          const originalValue = order[field] ?? '';
+          cell.innerHTML = '<input type="' + type + '" class="cell-edit-input">';
+          const input = cell.querySelector('.cell-edit-input');
+          input.value = originalValue;
+          input.focus();
+          if (type === 'text') input.select();
+
+          function commit() {
+            let newValue = input.value;
+            if (type === 'number') newValue = newValue === '' ? '' : Number(newValue);
+            order[field] = newValue;
+            saveOrders();
+            renderOrders();
+          }
+          input.addEventListener('blur', commit);
+          input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+            if (e.key === 'Escape') { input.value = originalValue; input.blur(); }
+          });
+        });
+      });
+
+      document.querySelectorAll('[data-role="marketSelect"]').forEach(sel => {
+        sel.addEventListener('change', () => {
+          const order = orders.find(o => o.id === sel.dataset.id);
+          if (!order) return;
+          order.marketCode = sel.value;
+          const market = MARKETS.find(m => m.code === sel.value);
+          order.country = market && market.countries.length ? market.countries[0].code : '';
+          saveOrders();
+          renderOrders();
+        });
+      });
+
+      document.querySelectorAll('[data-role="countrySelect"]').forEach(sel => {
+        sel.addEventListener('change', () => {
+          const order = orders.find(o => o.id === sel.dataset.id);
+          if (!order) return;
+          order.country = sel.value;
+          saveOrders();
+          renderOrders();
+        });
+      });
+
+      // Buffer's free-text country combobox (see countrySelectHtml).
+      document.querySelectorAll('[data-role="countryInput"]').forEach(input => {
+        input.addEventListener('change', () => {
+          const order = orders.find(o => o.id === input.dataset.id);
+          if (!order) return;
+          order.country = input.value.trim();
+          saveOrders();
+          renderOrders();
+        });
+      });
+
+      document.querySelectorAll('[data-role="statusSelect"]').forEach(sel => {
+        sel.addEventListener('change', () => {
+          const order = orders.find(o => o.id === sel.dataset.id);
+          if (!order) return;
+          const now = demoNow();
+          closeRunningSegment(order, now);
+          order.status = sel.value;
+          if (sel.value !== 'Waiting List') order.cancelled = false;
+          if (TRACKED_STATUSES.includes(sel.value) && !order.onHold) {
+            order.runningSince = now;
+            order.runningStatus = sel.value;
+          } else {
+            order.onHold = false;
+          }
+          order.ptimeOverride = '';
+          saveOrders();
+          renderOrders();
+        });
+      });
+
+      document.querySelectorAll('[data-role="holdBtn"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const order = orders.find(o => o.id === btn.dataset.id);
+          if (!order || !TRACKED_STATUSES.includes(order.status)) return;
+          const now = demoNow();
+          if (order.onHold) {
+            order.onHold = false;
+            order.runningSince = now;
+            order.runningStatus = order.status;
+          } else {
+            closeRunningSegment(order, now);
+            order.onHold = true;
+          }
+          saveOrders();
+          renderOrders();
+        });
+      });
+
+      document.querySelectorAll('[data-role="crossOutBtn"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const order = orders.find(o => o.id === btn.dataset.id);
+          if (!order) return;
+          order.cancelled = !order.cancelled;
+          saveOrders();
+          renderOrders();
+        });
+      });
+
+      document.querySelectorAll('[data-role="ptimeCell"]').forEach(cell => {
+        cell.addEventListener('dblclick', () => {
+          if (!isEditor) return;
+          const order = orders.find(o => o.id === cell.dataset.id);
+          if (!order) return;
+          const originalValue = order.ptimeOverride || formatDuration(entryElapsedMs(order));
+          cell.innerHTML = '<input type="text" class="cell-edit-input" placeholder="Xd HH:MM:SS">';
+          const input = cell.querySelector('.cell-edit-input');
+          input.value = originalValue;
+          input.focus();
+          input.select();
+          function commit() {
+            order.ptimeOverride = input.value;
+            saveOrders();
+            renderOrders();
+          }
+          input.addEventListener('blur', commit);
+          input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+            if (e.key === 'Escape') { input.value = originalValue; input.blur(); }
+          });
+        });
+      });
+
+      document.querySelectorAll('[data-role="breakdownCell"]').forEach(cell => {
+        cell.addEventListener('dblclick', () => {
+          if (!isEditor) return;
+          const order = orders.find(o => o.id === cell.dataset.id);
+          if (!order) return;
+          const originalValue = order.breakdownOverride || entryBreakdownEditText(order);
+          cell.innerHTML = '<textarea class="cell-edit-textarea" placeholder="Jul 17\nOn Process 1:20:00"></textarea>';
+          const input = cell.querySelector('.cell-edit-textarea');
+          input.value = originalValue;
+          input.focus();
+          input.select();
+          function commit() {
+            order.breakdownOverride = input.value;
+            // A hand-edited Break Down carries enough ("Label HH:MM:SS"
+            // part lines) to recompute Processing Time automatically, so
+            // typing the Break Down alone is enough — Processing Time
+            // stays separately double-click-editable too, for anyone who
+            // wants to set it by hand instead.
+            const autoMs = parseBreakdownDurationMs(order.breakdownOverride);
+            if (autoMs != null) order.ptimeOverride = formatDuration(autoMs);
+            saveOrders();
+            renderOrders();
+          }
+          input.addEventListener('blur', commit);
+          input.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') { input.value = originalValue; input.blur(); }
+          });
+        });
+      });
+
+      document.querySelectorAll('[data-role="deleteOrder"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          openDeleteModal(btn.dataset.id);
+        });
+      });
+
+      if (showPtime) updateAllPtimeDisplays();
+      render();
+    }
+
+    /* Initial load: pull the shared JSON and this device's permissions
+       from the Backoffice server (or local fallbacks if it isn't
+       reachable) in parallel, apply what they mean for the UI, then
+       render once everything's actually in hand. */
+    (async () => {
+      const [ordersData, who] = await Promise.all([loadOrders(), fetchWhoAmI()]);
+      orders = ordersData;
+      isEditor = who.isEditor;
+      canExtract = who.canExtract;
+
+      const exportBtn = document.getElementById('exportBtn');
+      if (exportBtn) exportBtn.classList.toggle('hidden', !canExtract);
+
+      // Import writes new data, so — like the other task pages' shared
+      // shared access rules — it only shows when the viewer is BOTH an
+      // editor and has extraction enabled; Export just needs extraction.
+      const importBtn = document.getElementById('importBtn');
+      if (importBtn) importBtn.classList.toggle('hidden', !(isEditor && canExtract));
+
+      if (!isEditor) {
+        // Matches the shared access rules on
+        // the other pages: viewers don't get a disabled-looking input
+        // row, the whole "New Order Request" panel is hidden — there's
+        // nothing for them to fill in there.
+        const newOrderSection = document.getElementById('newOrderSection');
+        if (newOrderSection) newOrderSection.classList.add('hidden');
+        setFormEditable(false);
+        setServerStatus('View-only access \u2014 you can browse, but changes here won\'t be saved.', true);
+
+        // Processing Time / Break Down are editor-only detail (matches
+        // The shared access rules hide them entirely
+        // for viewers on the other pages) — viewers never get the toggle,
+        // not just an off-by-default one.
+        if (ptimeToggleBtn) ptimeToggleBtn.classList.add('hidden');
+        showPtime = false;
+      }
+
+      renderOrders();
+
+      // Demo data snapshot: every saved case is Completed, so open the tab
+      // that actually holds the rows instead of an empty Pending view.
+      var demoPending = document.querySelectorAll('#panel-pending tbody tr').length;
+      var demoCompleted = document.querySelectorAll('#panel-completed tbody tr').length;
+      if (!demoPending && demoCompleted) {
+        var demoCompletedTab = document.getElementById('tab-completed');
+        if (demoCompletedTab) demoCompletedTab.click();
+      }
+    })();
+  </script>
+
+
+</body>
+</html>

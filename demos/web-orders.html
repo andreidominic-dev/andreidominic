@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Backoffice — web orders (demo)</title>
+<style>
+  :root {
+    --blackish: #2D2D2B;
+    --wheat: #B8926A;
+    --dusty-rose: #D4C8BE;
+    --wind: #B0B0B0;
+    --breath: #EAE6DF;
+    --sage: #C3D3BC;
+
+    --bg: var(--breath);
+    --panel: #FFFFFF;
+    --panel-border: #C9C5BD;
+    --accent-soft: rgba(184, 146, 106, 0.14);
+    --row-alt: rgba(212, 200, 190, 0.30);
+    --text: var(--blackish);
+    --text-dim: #6F6D68;
+    --text-faint: #8E887C;
+    --shadow-card: 0 1px 2px rgba(45, 45, 43, 0.05), 0 4px 14px rgba(45, 45, 43, 0.05);
+    --ease: cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    display: flex; flex-direction: column; min-height: 100vh;
+  }
+  button { font-family: inherit; }
+  :focus-visible { outline: 2px solid #92714F; outline-offset: 2px; }
+
+  .pii { filter: blur(7px); user-select: none; pointer-events: none; }
+
+  header {
+    position: relative;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 30px 24px 22px;
+    background: var(--panel); border-bottom: 1px solid var(--panel-border);
+  }
+  .back-btn {
+    position: absolute; left: 32px; top: 30px;
+    background: transparent; color: var(--text-dim);
+    border: 1px solid var(--panel-border);
+    padding: 8px 18px; font-size: 13px; border-radius: 3px;
+    text-decoration: none; white-space: nowrap;
+    transition: border-color .15s var(--ease), color .15s var(--ease), transform .15s var(--ease);
+  }
+  .back-btn:hover { border-color: var(--wheat); color: var(--blackish); transform: translateY(-1px); }
+  h1 { font-weight: 700; font-size: 27px; letter-spacing: 0.22em; text-indent: 0.22em; margin: 0 0 12px; }
+  .header-rule { width: 64px; height: 3px; background: var(--wheat); border-radius: 2px; }
+
+  main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: minmax(430px, 42%) 1fr;
+    align-items: start; gap: 30px;
+    padding: 34px 40px 52px;
+    max-width: 1500px; margin: 0 auto; width: 100%;
+  }
+  .content-col, .kpi-col { display: flex; flex-direction: column; min-width: 0; }
+  .kpi-col { gap: 18px; }
+  .kpi-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; align-items: stretch; }
+
+  .section-label {
+    font-size: 12px; letter-spacing: 0.12em; color: var(--text-dim);
+    margin-bottom: 12px; text-transform: uppercase;
+  }
+  .status-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px; font-size: 12px; color: var(--text-dim); margin-bottom: 18px;
+  }
+  .status-info { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--wheat); flex: none; }
+  .refresh-btn {
+    padding: 5px 12px; font-size: 11.5px; font-weight: 600; border-radius: 4px;
+    background: transparent; color: var(--text-dim);
+    border: 1px solid var(--panel-border); cursor: pointer;
+    transition: border-color .15s var(--ease), color .15s var(--ease), background .15s var(--ease);
+  }
+  .refresh-btn:hover { border-color: var(--wheat); color: var(--text); background: var(--accent-soft); }
+
+  /* ---------- Entries table ---------- */
+  .entries-box {
+    background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: 8px; overflow-y: auto; overflow-x: auto;
+    max-height: 700px; box-shadow: var(--shadow-card);
+    scrollbar-width: thin; scrollbar-color: var(--panel-border) transparent;
+  }
+  .entries-box::-webkit-scrollbar { height: 8px; width: 8px; }
+  .entries-box::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 4px; }
+
+  .entries-head-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 9px 16px; border-bottom: 1px solid var(--panel-border);
+    background: var(--dusty-rose); font-size: 11px; font-weight: 600;
+    color: var(--blackish); position: sticky; top: 0; z-index: 2; min-width: 560px;
+  }
+  .entry-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 11px 16px; border-bottom: 1px solid var(--panel-border);
+    font-size: 13px; min-width: 560px;
+  }
+  .entry-row:last-child { border-bottom: none; }
+  .entry-row:nth-child(even) { background: var(--row-alt); }
+  .entry-row:hover { background: var(--accent-soft); }
+  .entry-cell { flex: 1; min-width: 0; }
+  .entry-cell.dt { flex: 0 0 108px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .entry-cell.numeric { flex: 0 0 82px; text-align: right; font-variant-numeric: tabular-nums; }
+  .entry-cell.remarks { flex: 2; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .entries-head-row .entry-cell.dt { flex: 0 0 108px; }
+  .entries-head-row .entry-cell.numeric { flex: 0 0 82px; text-align: right; }
+  .entries-head-row .entry-cell.remarks { flex: 2; }
+  .entry-cell .cell-label { display: none; }
+
+  /* ---------- Cards ---------- */
+  .card-title {
+    font-size: 12.5px; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--blackish); margin-bottom: 3px;
+  }
+  .card-subtitle { font-size: 11px; color: var(--text-dim); margin-bottom: 14px; }
+
+  .kpi-square {
+    background: var(--blackish); border-radius: 10px; padding: 20px;
+    display: flex; flex-direction: column; color: var(--breath);
+    box-shadow: var(--shadow-card); min-height: 210px;
+  }
+  .kpi-square .card-title { color: var(--wheat); }
+  .kpi-square .card-subtitle { color: rgba(234, 230, 223, 0.6); }
+  .kpi-stats { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+  .kpi-stat {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 8px; padding: 9px 0; border-top: 1px solid rgba(234, 230, 223, 0.16);
+  }
+  .kpi-stat:first-child { border-top: none; }
+  .kpi-stat-label { font-size: 12.5px; color: rgba(234, 230, 223, 0.78); }
+  .kpi-stat-value { font-size: 21px; font-weight: 700; white-space: nowrap; }
+  .kpi-stat-value small { font-size: 11px; font-weight: 400; color: var(--wheat); margin-left: 2px; }
+
+  .pie-card, .totals-card, .trend-card {
+    background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: 10px; padding: 18px; box-shadow: var(--shadow-card);
+  }
+  .pie-card, .totals-card { display: flex; flex-direction: column; justify-content: center; }
+
+  .donut-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .donut {
+    position: relative; width: 102px; height: 102px; min-width: 102px;
+    border-radius: 50%; background: conic-gradient(var(--wind) 0% 100%);
+  }
+  .donut-hole {
+    position: absolute; inset: 18px; background: var(--panel); border-radius: 50%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .donut-hole-value { font-size: 16px; font-weight: 700; line-height: 1.1; }
+  .donut-hole-label { font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-dim); margin-top: 2px; }
+  .legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 108px; }
+  .legend li { display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
+  .legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .legend-pct { margin-left: auto; font-weight: 700; }
+
+  .totals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+  .totals-tile { background: var(--accent-soft); border-radius: 8px; padding: 11px 13px; display: flex; flex-direction: column; gap: 2px; }
+  .totals-tile-primary { grid-column: 1 / -1; background: var(--blackish); color: var(--breath); }
+  .totals-tile-value { font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .totals-tile-primary .totals-tile-value { color: var(--breath); font-size: 23px; }
+  .totals-tile-label { font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-dim); }
+  .totals-tile-primary .totals-tile-label { color: var(--wheat); }
+
+  /* ---------- Charts ---------- */
+  .trend-card { padding: 18px 18px 14px; }
+  .chart-wrap { position: relative; width: 100%; overflow-x: auto; }
+  .chart-svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .c-grid { stroke: var(--panel-border); stroke-width: 1; opacity: 0.7; }
+  .c-axis { font-size: 9px; fill: var(--text-dim); font-family: inherit; }
+  .c-line { fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .c-dot { transition: r .15s var(--ease); cursor: default; }
+  .c-dot:hover, .c-dot.active { r: 5; }
+  .chart-tooltip {
+    position: absolute; transform: translate(-50%, -128%);
+    background: var(--blackish); color: var(--breath);
+    font-size: 11px; line-height: 1.5; padding: 7px 10px; border-radius: 6px;
+    pointer-events: none; opacity: 0; transition: opacity .12s var(--ease);
+    white-space: nowrap; z-index: 5;
+  }
+  .chart-tooltip.show { opacity: 1; }
+  .chart-tooltip b { color: var(--wheat); }
+  .trend-legend { flex-direction: row; margin: 12px 0 0; gap: 18px; flex-wrap: wrap; }
+  .trend-legend li { font-size: 11.5px; }
+
+  /* ---------- Toast ---------- */
+  .toast {
+    position: fixed; left: 50%; bottom: 26px; transform: translate(-50%, 12px);
+    background: var(--blackish); color: #F6F2EA; font-size: 13px; font-weight: 600;
+    padding: 11px 18px; border-radius: 8px; box-shadow: 0 12px 30px rgba(45,45,43,.28);
+    opacity: 0; pointer-events: none; z-index: 90;
+    transition: opacity .18s var(--ease), transform .18s var(--ease);
+    max-width: calc(100vw - 32px); text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (max-width: 1180px) {
+    .kpi-row { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 1000px) {
+    main { grid-template-columns: 1fr; }
+    .kpi-col { order: -1; }
+    .kpi-row { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 720px) {
+    main { padding: 22px 18px 44px; }
+    header { padding: 70px 18px 20px; }
+    .back-btn { left: 18px; top: 18px; }
+    h1 { font-size: 20px; letter-spacing: 0.12em; text-indent: 0.12em; }
+    .entries-head-row { display: none; }
+    .entry-row { flex-wrap: wrap; row-gap: 4px; min-width: 0; }
+    .entry-cell, .entry-cell.dt, .entry-cell.numeric { flex: 1 1 45%; text-align: left; }
+    .entry-cell.remarks { flex-basis: 100%; white-space: normal; }
+    .entry-cell .cell-label { display: block; font-size: 10px; letter-spacing: 0.02em; color: var(--text-faint); margin-bottom: 1px; }
+    .kpi-stat-value { font-size: 19px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back-btn" href="home.html">&larr; Back</a>
+  <h1>WEB ORDERS</h1>
+  <div class="header-rule"></div>
+</header>
+
+<main>
+  <div class="content-col">
+    <div class="section-label">Orders</div>
+    <div class="status-row">
+      <div class="status-info"><span class="status-dot"></span><span>Connected to the demo data &mdash; entries loaded.</span></div>
+      <button class="refresh-btn" type="button" id="refreshBtn">Refresh</button>
+    </div>
+
+    <div class="entries-box" id="entriesBox"></div>
+  </div>
+
+  <aside class="kpi-col">
+    <div class="kpi-row">
+      <div class="kpi-square">
+        <div class="card-title">Daily Averages</div>
+        <div class="card-subtitle" id="kpiSubtitle">Across 0 days</div>
+        <div class="kpi-stats">
+          <div class="kpi-stat">
+            <span class="kpi-stat-label">Order Received</span>
+            <span class="kpi-stat-value" id="kpiReceived">0<small>/day</small></span>
+          </div>
+          <div class="kpi-stat">
+            <span class="kpi-stat-label">Posted Orders</span>
+            <span class="kpi-stat-value" id="kpiPosted">0<small>/day</small></span>
+          </div>
+          <div class="kpi-stat">
+            <span class="kpi-stat-label">Follow Up</span>
+            <span class="kpi-stat-value" id="kpiFollowup">0<small>/day</small></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="pie-card">
+        <div class="card-title">Order Mix</div>
+        <div class="card-subtitle">Share of total volume</div>
+        <div class="donut-row">
+          <div class="donut" id="donutChart">
+            <div class="donut-hole">
+              <span class="donut-hole-value" id="donutTotal">0</span>
+              <span class="donut-hole-label">total</span>
+            </div>
+          </div>
+          <ul class="legend">
+            <li><span class="legend-dot" style="background: var(--wheat)"></span>Received<span class="legend-pct" id="pieReceivedPct">0%</span></li>
+            <li><span class="legend-dot" style="background: var(--blackish)"></span>Posted<span class="legend-pct" id="piePostedPct">0%</span></li>
+            <li><span class="legend-dot" style="background: var(--dusty-rose)"></span>Follow Up<span class="legend-pct" id="pieFollowupPct">0%</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="totals-card">
+        <div class="card-title">All-Time Totals</div>
+        <div class="card-subtitle" id="totalsSubtitle">No entries yet</div>
+        <div class="totals-grid">
+          <div class="totals-tile totals-tile-primary">
+            <span class="totals-tile-value" id="totalOrders">0</span>
+            <span class="totals-tile-label">Total Orders</span>
+          </div>
+          <div class="totals-tile">
+            <span class="totals-tile-value" id="totalReceived">0</span>
+            <span class="totals-tile-label">Received</span>
+          </div>
+          <div class="totals-tile">
+            <span class="totals-tile-value" id="totalPosted">0</span>
+            <span class="totals-tile-label">Posted</span>
+          </div>
+          <div class="totals-tile">
+            <span class="totals-tile-value" id="totalFollowup">0</span>
+            <span class="totals-tile-label">Follow Up</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="trend-card">
+      <div class="card-title">Daily Order Trend</div>
+      <div class="card-subtitle" id="trendSubtitle">Received, Posted &amp; Follow Up by day</div>
+      <div class="chart-wrap" id="dailyChart"></div>
+      <ul class="legend trend-legend">
+        <li><span class="legend-dot" style="background: var(--wheat)"></span>Received</li>
+        <li><span class="legend-dot" style="background: var(--blackish)"></span>Posted</li>
+        <li><span class="legend-dot" style="background: var(--dusty-rose)"></span>Follow Up</li>
+      </ul>
+    </div>
+
+    <div class="trend-card">
+      <div class="card-title">Weekly Order Trend</div>
+      <div class="card-subtitle" id="weeklySubtitle">Received, Posted &amp; Follow Up by week</div>
+      <div class="chart-wrap" id="weeklyChart"></div>
+      <ul class="legend trend-legend">
+        <li><span class="legend-dot" style="background: var(--wheat)"></span>Received</li>
+        <li><span class="legend-dot" style="background: var(--blackish)"></span>Posted</li>
+        <li><span class="legend-dot" style="background: var(--dusty-rose)"></span>Follow Up</li>
+      </ul>
+    </div>
+  </aside>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ============================================================
+   DEMO DATA — invented daily counts, generated from a fixed seed
+   (identical generator to the dashboard demo, so the numbers agree).
+   ============================================================ */
+var SEED = 20260811;
+var START = [2026, 7, 11];   /* Aug 11, 2026 */
+var END   = [2026, 10, 13];  /* Nov 13, 2026 */
+
+function rng(seed) {
+  var s = seed;
+  return function () {
+    s = (s * 1664525 + 1013904223) % 4294967296;
+    return s / 4294967296;
+  };
+}
+function pad2(n) { return (n < 10 ? '0' : '') + n; }
+function isoDate(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+
+function buildOrders() {
+  var rand = rng(SEED);
+  var rows = [];
+  var d = new Date(START[0], START[1], START[2]);
+  var end = new Date(END[0], END[1], END[2]);
+  while (d <= end) {
+    var dow = d.getDay();
+    if (dow !== 0) {
+      var base = dow === 1 ? 1.16 : (dow === 5 ? 1.08 : 1);
+      rows.push({
+        date: isoDate(d),
+        received: Math.round((318 + rand() * 262) * base),
+        posted: Math.round((512 + rand() * 402) * base),
+        followup: Math.round(13 + rand() * 29),
+        remarks: ''
+      });
+    }
+    d.setDate(d.getDate() + 1);
+  }
+  var notes = { 11: 'Batch posted late', 24: 'Holiday queue cleared', 37: 'Four orders re-keyed', 52: 'Extraction at 6am', 68: 'Two follow-ups reopened' };
+  Object.keys(notes).forEach(function (i) { if (rows[i]) rows[i].remarks = notes[i]; });
+  return rows;
+}
+
+var ORDERS = buildOrders();
+
+function fmt(n) { return Number(n).toLocaleString('en-US'); }
+function sumField(key) { return ORDERS.reduce(function (t, r) { return t + r[key]; }, 0); }
+var TOTALS = { received: sumField('received'), posted: sumField('posted'), followup: sumField('followup') };
+var DAYS = ORDERS.length;
+
+/* ---------- toast ---------- */
+var toastEl = document.getElementById('toast');
+var toastTimer = null;
+function showToast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 2100);
+}
+
+/* ---------- table ---------- */
+function formatDateShort(iso) {
+  var d = new Date(iso + 'T00:00:00');
+  return isNaN(d.getTime()) ? iso : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+function formatDateNice(iso) {
+  var d = new Date(iso + 'T00:00:00');
+  return isNaN(d.getTime()) ? iso : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function renderTable() {
+  var head = '<div class="entries-head-row">' +
+    '<div class="entry-cell dt">Date</div>' +
+    '<div class="entry-cell numeric">Received</div>' +
+    '<div class="entry-cell numeric">Posted</div>' +
+    '<div class="entry-cell numeric">Follow Up</div>' +
+    '<div class="entry-cell remarks">Remarks</div>' +
+  '</div>';
+  var rows = ORDERS.map(function (r) {
+    return '<div class="entry-row">' +
+      '<div class="entry-cell dt"><span class="cell-label">Date</span>' + r.date + '</div>' +
+      '<div class="entry-cell numeric"><span class="cell-label">Received</span>' + fmt(r.received) + '</div>' +
+      '<div class="entry-cell numeric"><span class="cell-label">Posted</span>' + fmt(r.posted) + '</div>' +
+      '<div class="entry-cell numeric"><span class="cell-label">Follow Up</span>' + fmt(r.followup) + '</div>' +
+      '<div class="entry-cell remarks"><span class="cell-label">Remarks</span>' + (r.remarks || '\u2014') + '</div>' +
+    '</div>';
+  }).join('');
+  document.getElementById('entriesBox').innerHTML = head + rows;
+}
+
+/* ---------- sidebar ---------- */
+function renderSidebar() {
+  document.getElementById('kpiSubtitle').textContent = 'Across ' + DAYS + (DAYS === 1 ? ' day' : ' days');
+  document.getElementById('kpiReceived').innerHTML = fmt(Math.round(TOTALS.received / DAYS)) + '<small>/day</small>';
+  document.getElementById('kpiPosted').innerHTML = fmt(Math.round(TOTALS.posted / DAYS)) + '<small>/day</small>';
+  document.getElementById('kpiFollowup').innerHTML = fmt(Math.round(TOTALS.followup / DAYS)) + '<small>/day</small>';
+
+  var total = TOTALS.received + TOTALS.posted + TOTALS.followup;
+  var rPct = total ? TOTALS.received / total * 100 : 0;
+  var pPct = total ? TOTALS.posted / total * 100 : 0;
+  var fPct = 100 - rPct - pPct;
+  var p1 = rPct, p2 = rPct + pPct;
+  document.getElementById('donutChart').style.background =
+    'conic-gradient(var(--wheat) 0% ' + p1.toFixed(2) + '%, var(--blackish) ' + p1.toFixed(2) + '% ' + p2.toFixed(2) + '%, var(--dusty-rose) ' + p2.toFixed(2) + '% 100%)';
+  document.getElementById('donutTotal').textContent = fmt(total);
+  document.getElementById('pieReceivedPct').textContent = Math.round(rPct) + '%';
+  document.getElementById('piePostedPct').textContent = Math.round(pPct) + '%';
+  document.getElementById('pieFollowupPct').textContent = Math.round(fPct) + '%';
+
+  document.getElementById('totalOrders').textContent = fmt(total);
+  document.getElementById('totalReceived').textContent = fmt(TOTALS.received);
+  document.getElementById('totalPosted').textContent = fmt(TOTALS.posted);
+  document.getElementById('totalFollowup').textContent = fmt(TOTALS.followup);
+  document.getElementById('totalsSubtitle').textContent = 'Since ' + formatDateNice(ORDERS[0].date);
+}
+
+/* ---------- charts ---------- */
+function smoothPath(pts) {
+  if (!pts.length) return '';
+  if (pts.length === 1) return 'M' + pts[0].x + ',' + pts[0].y;
+  var d = 'M' + pts[0].x.toFixed(1) + ',' + pts[0].y.toFixed(1) + ' ';
+  for (var i = 0; i < pts.length - 1; i++) {
+    var p0 = pts[i === 0 ? i : i - 1], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2 < pts.length ? i + 2 : i + 1];
+    var c1x = p1.x + (p2.x - p0.x) / 6, c1y = p1.y + (p2.y - p0.y) / 6;
+    var c2x = p2.x - (p3.x - p1.x) / 6, c2y = p2.y - (p3.y - p1.y) / 6;
+    d += 'C' + c1x.toFixed(1) + ',' + c1y.toFixed(1) + ' ' + c2x.toFixed(1) + ',' + c2y.toFixed(1) +
+      ' ' + p2.x.toFixed(1) + ',' + p2.y.toFixed(1) + ' ';
+  }
+  return d.trim();
+}
+
+var SERIES = [
+  { key: 'received', label: 'Received', color: 'var(--wheat)' },
+  { key: 'posted', label: 'Posted', color: 'var(--blackish)' },
+  { key: 'followup', label: 'Follow Up', color: 'var(--dusty-rose)' }
+];
+
+function drawChart(hostId, points, labels) {
+  var host = document.getElementById(hostId);
+  if (points.length < 2) {
+    host.innerHTML = '<div style="padding:40px 10px;text-align:center;color:#6F6D68;font-size:13px;">Add entries across at least two periods to see a trend here.</div>';
+    return;
+  }
+  var W = 780, H = 232, padL = 40, padR = 14, padT = 20, padB = 34;
+  var plotW = W - padL - padR, plotH = H - padT - padB;
+  var maxV = 1;
+  points.forEach(function (p) { SERIES.forEach(function (s) { maxV = Math.max(maxV, p[s.key]); }); });
+  var step = Math.ceil(maxV * 1.12 / 4 / 50) * 50 || 50;
+  var yMax = step * 4;
+  var xFor = function (i) { return padL + (points.length === 1 ? plotW / 2 : (plotW / (points.length - 1)) * i); };
+  var yFor = function (v) { return padT + plotH - (Math.min(v, yMax) / yMax) * plotH; };
+
+  var grid = '';
+  for (var g = 0; g <= 4; g++) {
+    var v = step * g, y = yFor(v);
+    grid += '<line class="c-grid" x1="' + padL + '" y1="' + y.toFixed(1) + '" x2="' + (W - padR) + '" y2="' + y.toFixed(1) + '"/>' +
+      '<text class="c-axis" x="' + (padL - 7) + '" y="' + (y + 3).toFixed(1) + '" text-anchor="end">' + fmt(v) + '</text>';
+  }
+
+  var labelSkip = Math.ceil(points.length / 10);
+  var xLabels = points.map(function (p, i) {
+    if (i % labelSkip !== 0 && i !== points.length - 1) return '';
+    return '<text class="c-axis" x="' + xFor(i).toFixed(1) + '" y="' + (H - 12) + '" text-anchor="middle">' + labels[i].a + '</text>' +
+      (labels[i].b ? '<text class="c-axis" x="' + xFor(i).toFixed(1) + '" y="' + (H - 2) + '" text-anchor="middle">' + labels[i].b + '</text>' : '');
+  }).join('');
+
+  var paths = '', dots = '';
+  SERIES.forEach(function (s) {
+    var pts = points.map(function (p, i) { return { x: xFor(i), y: yFor(p[s.key]) }; });
+    paths += '<path class="c-line" d="' + smoothPath(pts) + '" stroke="' + s.color + '"></path>';
+    pts.forEach(function (pt, i) {
+      dots += '<circle class="c-dot" data-s="' + s.key + '" data-i="' + i + '" cx="' + pt.x.toFixed(1) + '" cy="' + pt.y.toFixed(1) + '" r="3.2" fill="' + s.color + '"/>';
+    });
+  });
+
+  host.innerHTML = '<svg class="chart-svg" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Order trend chart">' +
+    grid + paths + dots + xLabels + '</svg><div class="chart-tooltip" id="' + hostId + 'Tip"></div>';
+
+  var tip = document.getElementById(hostId + 'Tip');
+  var svg = host.querySelector('svg');
+  host.onmousemove = function (e) {
+    var dot = e.target.closest('.c-dot');
+    if (!dot) { tip.classList.remove('show'); return; }
+    var i = Number(dot.dataset.i);
+    var p = points[i];
+    Array.prototype.forEach.call(svg.querySelectorAll('.c-dot.active'), function (el) { el.classList.remove('active'); });
+    dot.classList.add('active');
+    tip.innerHTML = '<b>' + labels[i].full + '</b><br>Received: ' + fmt(p.received) +
+      ' &middot; Posted: ' + fmt(p.posted) + '<br>Follow Up: ' + fmt(p.followup);
+    var svgRect = svg.getBoundingClientRect();
+    var hostRect = host.getBoundingClientRect();
+    var scale = svgRect.width / W;
+    tip.style.left = (Number(dot.getAttribute('cx')) * scale + (svgRect.left - hostRect.left)) + 'px';
+    tip.style.top = (Number(dot.getAttribute('cy')) * scale + (svgRect.top - hostRect.top)) + 'px';
+    tip.classList.add('show');
+  };
+  host.onmouseleave = function () { tip.classList.remove('show'); };
+}
+
+function renderCharts() {
+  var daily = ORDERS.slice(-14);
+  document.getElementById('trendSubtitle').textContent = formatDateShort(daily[0].date) + ' \u2013 ' + formatDateShort(daily[daily.length - 1].date);
+  drawChart('dailyChart', daily, daily.map(function (r) {
+    return { a: formatDateShort(r.date), b: '', full: formatDateNice(r.date) };
+  }));
+
+  var weeks = {};
+  ORDERS.forEach(function (r) {
+    var d = new Date(r.date + 'T00:00:00');
+    var dow = d.getDay();
+    d.setDate(d.getDate() + (dow === 0 ? -6 : 1 - dow));
+    var key = isoDate(d);
+    if (!weeks[key]) weeks[key] = { date: key, received: 0, posted: 0, followup: 0 };
+    weeks[key].received += r.received;
+    weeks[key].posted += r.posted;
+    weeks[key].followup += r.followup;
+  });
+  var weekly = Object.keys(weeks).sort().map(function (k) { return weeks[k]; });
+
+  function isoWeek(iso) {
+    var p = iso.split('-').map(Number);
+    var d = new Date(Date.UTC(p[0], p[1] - 1, p[2]));
+    var dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  }
+
+  document.getElementById('weeklySubtitle').textContent =
+    formatDateShort(weekly[0].date) + ' \u2013 ' + formatDateShort(weekly[weekly.length - 1].date);
+  drawChart('weeklyChart', weekly, weekly.map(function (w) {
+    return { a: 'W' + isoWeek(w.date), b: formatDateShort(w.date), full: 'Week of ' + formatDateNice(w.date) };
+  }));
+}
+
+/* ---------- init ---------- */
+function renderAll() {
+  renderTable();
+  renderSidebar();
+  renderCharts();
+}
+renderAll();
+
+document.getElementById('refreshBtn').addEventListener('click', function () {
+  renderAll();
+  showToast('Demo data refreshed');
+});
+
+var resizeTimer = null;
+window.addEventListener('resize', function () {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(renderCharts, 180);
+});
+</script>
+</body>
+</html>

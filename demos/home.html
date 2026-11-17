@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Backoffice — operations home (demo)</title>
+<style>
+  :root {
+    --blackish: #2D2D2B;
+    --wheat: #B8926A;
+    --wheat-deep: #92714F;
+    --dusty-rose: #D4C8BE;
+    --wind: #B0B0B0;
+    --breath: #EAE6DF;
+
+    --bg: var(--breath);
+    --panel: #FFFFFF;
+    --panel-border: #C9C5BD;
+    --accent-dim: rgba(184, 146, 106, 0.14);
+    --text: var(--blackish);
+    --text-dim: #6F6D68;
+    --text-faint: #8E887C;
+
+    --urgent: #B85C4A;
+    --urgent-soft: rgba(184, 92, 74, 0.10);
+    --urgent-border: rgba(184, 92, 74, 0.28);
+    --good: #4C9A5C;
+
+    --radius: 10px;
+    --ease: cubic-bezier(0.2, 0.7, 0.3, 1);
+    --shadow-card: 0 1px 2px rgba(45, 45, 43, 0.05), 0 4px 14px rgba(45, 45, 43, 0.05);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  a { color: inherit; }
+  button { font-family: inherit; }
+
+  :focus-visible { outline: 2px solid var(--wheat-deep); outline-offset: 2px; }
+
+  .pii { filter: blur(7px); user-select: none; pointer-events: none; }
+
+  /* ---------- Header ---------- */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 16px 32px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--panel-border);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+  .header-left { display: flex; align-items: center; gap: 18px; min-width: 0; }
+  h1 {
+    font-weight: 700;
+    font-size: 23px;
+    letter-spacing: 0.45em;
+    text-indent: 0.45em;
+    margin: 0;
+    white-space: nowrap;
+  }
+  .conn-status { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-dim); }
+  .conn-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--good); flex: none; }
+
+  .dashboard-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--wheat); color: #fff;
+    border: 1px solid var(--wheat);
+    padding: 9px 18px; font-size: 13px; font-weight: 700;
+    border-radius: 6px; text-decoration: none;
+    box-shadow: 0 2px 8px rgba(184, 146, 106, 0.35);
+    transition: background 0.15s var(--ease), border-color 0.15s var(--ease), transform 0.15s var(--ease), box-shadow 0.15s var(--ease);
+    white-space: nowrap;
+  }
+  .dashboard-btn:hover { background: var(--blackish); border-color: var(--blackish); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(45,45,43,.28); }
+  .dashboard-btn svg { width: 14px; height: 14px; }
+
+  /* ---------- Attention bar ---------- */
+  .attention-bar {
+    display: flex; flex-direction: column; gap: 4px;
+    padding: 7px 32px;
+    background: var(--urgent-soft);
+    border-bottom: 1px solid var(--urgent-border);
+  }
+  .attention-row { display: flex; align-items: center; gap: 9px; }
+  .attention-dot {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--urgent);
+    flex-shrink: 0; animation: attention-pulse 2s infinite;
+  }
+  @keyframes attention-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(184, 92, 74, 0.45); }
+    70% { box-shadow: 0 0 0 5px rgba(184, 92, 74, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(184, 92, 74, 0); }
+  }
+  .attention-text { font-size: 12px; }
+  .attention-text b { font-weight: 700; }
+  .attention-link {
+    margin-left: auto; font-size: 11.5px; font-weight: 600;
+    color: var(--urgent); text-decoration: none; white-space: nowrap;
+    padding: 3px 10px; border: 1px solid var(--urgent-border); border-radius: 6px;
+    background: transparent; cursor: pointer;
+  }
+  .attention-link:hover { background: rgba(184, 92, 74, 0.12); }
+
+  /* ---------- Layout ---------- */
+  main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 22px 32px 32px;
+    max-width: 1180px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .section-label {
+    font-size: 11.5px; letter-spacing: 0.14em; color: var(--text-dim);
+    text-transform: uppercase; font-weight: 700;
+  }
+  .dashboard-row { display: flex; gap: 20px; flex-wrap: wrap; align-items: stretch; }
+  .dashboard-row > .focus-panel { flex: 1 1 380px; margin: 0; }
+  .ref-column { flex: 1 1 380px; display: flex; flex-direction: column; gap: 14px; }
+
+  .panel-heading-row {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 12px; margin-bottom: 10px;
+  }
+  .panel-heading-row.ref-heading-row { align-items: center; }
+  .panel-open-link {
+    font-size: 12px; font-weight: 600; color: var(--wheat-deep);
+    background: none; border: none; padding: 0; cursor: pointer;
+    white-space: nowrap; flex-shrink: 0; font-family: inherit;
+  }
+  .panel-open-link:hover { color: var(--blackish); text-decoration: underline; }
+
+  .focus-panel {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    box-shadow: var(--shadow-card);
+  }
+  .focus-body { display: flex; flex-direction: column; gap: 8px; }
+  .cases-count-inline {
+    text-transform: none; letter-spacing: normal;
+    font-weight: 600; font-size: 12px; color: var(--wheat-deep);
+  }
+
+  /* ---------- Pending cases ---------- */
+  .case-scroll {
+    max-height: 160px; overflow-y: auto;
+    margin: 0 -4px; padding: 0 4px;
+    scrollbar-width: thin; scrollbar-color: var(--panel-border) transparent;
+  }
+  .case-scroll::-webkit-scrollbar { width: 7px; }
+  .case-scroll::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 4px; }
+  .case-mini-list { display: flex; flex-direction: column; gap: 6px; }
+  .case-mini-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px 8px 10px;
+    border: 1px solid var(--panel-border);
+    border-left: 3px solid var(--wheat);
+    border-radius: 8px; background: var(--panel);
+  }
+  .case-mini-row.is-stale { border-left-color: var(--urgent); }
+  .case-mini-icon {
+    flex-shrink: 0; width: 26px; height: 26px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 7px; background: var(--accent-dim); color: var(--wheat-deep);
+  }
+  .case-mini-row.is-stale .case-mini-icon { background: var(--urgent-soft); color: var(--urgent); }
+  .case-mini-icon svg { width: 15px; height: 15px; }
+  .case-mini-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+  .case-mini-no {
+    font-size: 13px; font-weight: 700;
+    overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  }
+  .case-mini-sub { display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .case-mini-date { font-size: 11.5px; color: var(--text-dim); white-space: nowrap; }
+  .case-mini-crm {
+    font-size: 11px; color: var(--text-faint);
+    overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+    padding-left: 6px; border-left: 1px solid var(--panel-border);
+  }
+  .case-mini-flag {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 10px;
+    background: var(--urgent-soft); color: var(--urgent); white-space: nowrap; flex-shrink: 0;
+  }
+  .case-mini-flag-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--urgent); }
+  .focus-empty { font-size: 13px; color: var(--text-faint); padding: 6px 2px; }
+
+  /* ---------- References ---------- */
+  .ref-search { position: relative; flex-shrink: 0; }
+  .ref-search-icon {
+    position: absolute; left: 8px; top: 50%; transform: translateY(-50%);
+    width: 12px; height: 12px; color: var(--text-faint); pointer-events: none; display: flex;
+  }
+  .ref-search-input {
+    width: 108px; padding: 5px 22px 5px 25px;
+    font: inherit; font-size: 12px; color: var(--text);
+    background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: 6px; transition: width 0.18s var(--ease), border-color 0.15s var(--ease);
+  }
+  .ref-search-input:focus { outline: none; width: 178px; border-color: var(--wheat); }
+  .ref-search-input::placeholder { color: var(--text-faint); }
+  .ref-search-clear {
+    position: absolute; right: 3px; top: 50%; transform: translateY(-50%);
+    width: 16px; height: 16px; display: none; align-items: center; justify-content: center;
+    background: none; border: none; border-radius: 5px; cursor: pointer;
+    color: var(--text-dim); font-size: 13px; line-height: 1;
+  }
+  .ref-search-clear.show { display: flex; }
+  .ref-search-results {
+    position: absolute; top: calc(100% + 6px); right: 0; width: 290px; z-index: 40;
+    display: flex; flex-direction: column;
+    border: 1px solid var(--panel-border); border-radius: 8px;
+    max-height: 244px; overflow-y: auto; background: var(--panel);
+    box-shadow: 0 12px 28px rgba(45, 45, 43, 0.16);
+    opacity: 0; transform: translateY(-4px); pointer-events: none;
+    transition: opacity 0.15s var(--ease), transform 0.15s var(--ease);
+  }
+  .ref-search-results.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+  .ref-search-empty { padding: 16px 14px; font-size: 12.5px; color: var(--text-faint); text-align: center; }
+  .ref-sr-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 14px; font-size: 13px; text-decoration: none;
+    border-bottom: 1px solid var(--panel-border); text-align: left;
+    background: none; border-left: none; border-right: none; border-top: none;
+    width: 100%; cursor: pointer; color: var(--text); font-family: inherit;
+  }
+  .ref-sr-item:last-child { border-bottom: none; }
+  .ref-sr-item:hover { background: var(--accent-dim); }
+  .ref-sr-main { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+  .ref-sr-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ref-sr-name mark { background: rgba(184, 146, 106, 0.4); color: var(--blackish); border-radius: 2px; }
+  .ref-sr-group { font-size: 10.5px; color: var(--text-faint); }
+
+  .ref-menu { display: flex; flex-direction: column; gap: 8px; }
+  .ref-menu-item { position: relative; }
+  .ref-menu-trigger {
+    width: 100%; display: flex; align-items: center; gap: 10px;
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 8px;
+    padding: 11px 14px; font-size: 13.5px; font-weight: 600; color: var(--text);
+    cursor: pointer; text-align: left;
+    transition: border-color 0.15s var(--ease), background 0.15s var(--ease);
+  }
+  .ref-menu-trigger:hover { border-color: var(--wheat); background: var(--accent-dim); }
+  .ref-menu-trigger[aria-expanded="true"] { border-color: var(--wheat); background: var(--accent-dim); }
+  .ref-menu-icon { width: 17px; height: 17px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .ref-menu-title { flex: 1; }
+  .ref-menu-count {
+    font-size: 11px; color: var(--text-faint); background: var(--accent-dim);
+    border-radius: 10px; padding: 1px 8px; flex-shrink: 0;
+  }
+  .ref-menu-caret { font-size: 9px; color: var(--text-dim); flex-shrink: 0; transition: transform 0.15s var(--ease); }
+  .ref-menu-trigger[aria-expanded="true"] .ref-menu-caret { transform: rotate(180deg); color: var(--wheat-deep); }
+
+  .ref-dropdown {
+    position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 30;
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 8px;
+    box-shadow: 0 12px 28px rgba(45, 45, 43, 0.16);
+    max-height: 196px; overflow-y: auto;
+    opacity: 0; transform: translateY(-4px); pointer-events: none;
+    transition: opacity 0.15s var(--ease), transform 0.15s var(--ease);
+  }
+  .ref-dropdown.is-open { opacity: 1; transform: translateY(0); pointer-events: auto; }
+  .ref-dd-item {
+    display: flex; align-items: center; gap: 10px; width: 100%;
+    padding: 9px 14px; font-size: 13px; text-align: left;
+    background: none; border: none; border-bottom: 1px solid var(--panel-border);
+    cursor: pointer; color: var(--text); font-family: inherit;
+  }
+  .ref-dd-item:last-child { border-bottom: none; }
+  .ref-dd-item:hover { background: var(--accent-dim); }
+  .ref-dd-icon { width: 15px; height: 15px; flex-shrink: 0; display: flex; }
+  .ref-dd-icon-word { color: #2E5FA3; }
+  .ref-dd-icon-excel { color: #1F7A4D; }
+  .ref-dd-icon-email { color: #A3572E; }
+  .ref-dd-icon-link { color: var(--wheat-deep); }
+  .ref-dd-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* ---------- Goat card ---------- */
+  .goat-action-card {
+    display: flex; align-items: center; gap: 14px; width: 100%;
+    background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: var(--radius); padding: 16px 18px;
+    text-align: left; cursor: pointer; font-family: inherit;
+    color: inherit; text-decoration: none;
+    transition: border-color 0.15s var(--ease), background 0.15s var(--ease), transform 0.15s var(--ease);
+  }
+  .goat-action-card:hover { border-color: var(--wheat); background: var(--accent-dim); transform: translateY(-1px); }
+  .goat-action-icon {
+    flex-shrink: 0; width: 38px; height: 38px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--wheat); color: #fff;
+  }
+  .goat-action-icon svg { width: 19px; height: 19px; }
+  .goat-action-body { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .goat-action-title { font-size: 14.5px; font-weight: 700; }
+  .goat-action-desc { font-size: 12px; color: var(--text-dim); line-height: 1.4; }
+  .goat-action-arrow { font-size: 15px; color: var(--text-dim); flex-shrink: 0; }
+
+  /* ---------- Task groups ---------- */
+  #taskGroups { display: flex; flex-direction: column; gap: 14px; }
+  .task-group-title {
+    font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--wheat-deep); font-weight: 700; margin-bottom: 8px;
+  }
+  .task-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .task-card {
+    position: relative; display: flex; flex-direction: column; gap: 3px;
+    background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: var(--radius); padding: 11px 14px;
+    text-decoration: none; color: var(--text); cursor: pointer;
+    font-family: inherit; text-align: left;
+    transition: border-color 0.15s var(--ease), background 0.15s var(--ease), transform 0.15s var(--ease), box-shadow 0.15s var(--ease);
+  }
+  .task-card:hover { border-color: var(--wheat); background: var(--accent-dim); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(45,45,43,.06); }
+  .task-card--demo { border-color: rgba(184, 146, 106, 0.55); }
+  .task-card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .task-name { font-size: 14.5px; font-weight: 700; }
+  .task-desc { font-size: 12px; color: var(--text-dim); line-height: 1.4; }
+  .task-badge {
+    font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 10px;
+    background: var(--urgent-soft); color: var(--urgent); white-space: nowrap; flex-shrink: 0;
+  }
+  .task-badge.demo {
+    background: var(--accent-dim); color: var(--wheat-deep);
+  }
+
+  /* ---------- Toast ---------- */
+  .toast {
+    position: fixed; left: 50%; bottom: 26px; transform: translate(-50%, 12px);
+    background: var(--blackish); color: #F6F2EA;
+    font-size: 13px; font-weight: 600; letter-spacing: 0.01em;
+    padding: 11px 18px; border-radius: 8px;
+    box-shadow: 0 12px 30px rgba(45,45,43,.28);
+    opacity: 0; pointer-events: none; z-index: 90;
+    transition: opacity 0.18s var(--ease), transform 0.18s var(--ease);
+    max-width: calc(100vw - 32px); text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (max-width: 760px) {
+    header { flex-direction: column; align-items: flex-start; gap: 12px; padding: 18px 20px; }
+    .header-right { width: 100%; }
+    .attention-bar { padding: 12px 20px; }
+    .attention-row { flex-wrap: wrap; }
+    .attention-link { margin-left: 0; }
+    main { padding: 18px 20px 32px; }
+    h1 { font-size: 17px; letter-spacing: 0.3em; text-indent: 0.3em; }
+    .task-grid { grid-template-columns: 1fr; }
+    .dashboard-row { gap: 14px; }
+    .focus-panel { padding: 14px 16px; }
+    .ref-search-input { width: 96px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>BACKOFFICE</h1>
+    <span class="conn-status"><span class="conn-dot"></span>Connected to the demo data</span>
+  </div>
+  <div class="header-right">
+    <a class="dashboard-btn" href="dashboard.html">
+      <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 13V7M6.5 13V3M11 13V9M15 13V5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      Dashboard
+    </a>
+  </div>
+</header>
+
+<div class="attention-bar" id="attentionBar"></div>
+
+<main>
+
+  <div class="dashboard-row">
+    <section class="focus-panel">
+      <div class="panel-heading-row">
+        <div class="section-label">Pending Cases <span class="cases-count-inline" id="casesCountLabel"></span></div>
+        <button type="button" class="panel-open-link" data-missing>Open page &rarr;</button>
+      </div>
+      <div class="focus-body">
+        <div class="case-scroll"><div class="case-mini-list" id="casesList"></div></div>
+      </div>
+    </section>
+
+    <div class="ref-column">
+      <section class="focus-panel">
+        <div class="panel-heading-row ref-heading-row">
+          <div class="section-label">Internal References</div>
+          <div class="ref-search">
+            <span class="ref-search-icon">
+              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.3"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+            </span>
+            <input type="text" class="ref-search-input" id="refSearchInput" placeholder="Search…" autocomplete="off" aria-label="Search internal references">
+            <button type="button" class="ref-search-clear" id="refSearchClear" aria-label="Clear search">&times;</button>
+            <div class="ref-search-results" id="refSearchResults" role="listbox" aria-label="Reference matches"></div>
+          </div>
+        </div>
+        <div class="ref-menu" id="refMenu"></div>
+      </section>
+
+      <a class="goat-action-card" href="goat-frames.html">
+        <span class="goat-action-icon">
+          <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="11" rx="1.4" stroke="currentColor" stroke-width="1.2"/><path d="M4 6h8M4 8.5h8M4 11h5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </span>
+        <span class="goat-action-body">
+          <span class="goat-action-title">Goat Frames Order Request</span>
+          <span class="goat-action-desc">Track all the submitted order requests for frames in the Goat Edition.</span>
+        </span>
+        <span class="goat-action-arrow" aria-hidden="true">&rarr;</span>
+      </a>
+    </div>
+  </div>
+
+  <div id="taskGroups"></div>
+
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ============================================================
+   DEMO DATA — all values are invented. Edit here.
+   ============================================================ */
+var DEMO = {
+  summary: {
+    followUpsStale: 5,      /* must match follow-up.html "Needs Attention" */
+    pendingCases: 17,
+    pendingCasesStale: 6
+  },
+  pendingCases: [
+    { caseNo: 'CAS-2611042-Q7L2M', createdDate: '2026-11-03', viewFolder: 'Interior Design Agreement' },
+    { caseNo: 'CAS-2611051-R3T8V', createdDate: '2026-11-05', viewFolder: 'Interior Design Agreement' },
+    { caseNo: 'CAS-2611063-K9B4C', createdDate: '2026-11-06', viewFolder: 'Price Check' },
+    { caseNo: 'CAS-2611074-M2X6H', createdDate: '2026-11-07', viewFolder: 'Order Correction' },
+    { caseNo: 'CAS-2611085-D8N1P', createdDate: '2026-11-09', viewFolder: 'Interior Design Agreement' },
+    { caseNo: 'CAS-2611096-T5W3J', createdDate: '2026-11-10', viewFolder: 'Price Check' },
+    { caseNo: 'CAS-2611107-Y4F9S', createdDate: '2026-11-11', viewFolder: 'Order Correction' },
+    { caseNo: 'CAS-2611118-L6H2G', createdDate: '2026-11-12', viewFolder: 'Interior Design Agreement' },
+    { caseNo: 'CAS-2611129-C1Q7Z', createdDate: '2026-11-13', viewFolder: 'Price Check' },
+    { caseNo: 'CAS-2611140-P3M8R', createdDate: '2026-11-14', viewFolder: 'Order Correction' }
+  ],
+  references: [
+    { title: 'Procedure', icon: 'word', items: [
+      { name: 'Order Admin Playbook — revision 4', type: 'word' },
+      { name: 'Back-Office Case Routing Guide', type: 'word' }
+    ]},
+    { title: 'Excel Files', icon: 'excel', items: [
+      { name: 'Market Coverage Map', type: 'excel' },
+      { name: 'Accessory Order Matrix', type: 'excel' },
+      { name: 'Template Library Index', type: 'excel' },
+      { name: 'Weekly Volume Log', type: 'excel' },
+      { name: 'Frame Size Reference', type: 'excel' },
+      { name: 'Colour Code Legend', type: 'excel' }
+    ]},
+    { title: 'Emails', icon: 'email', items: [
+      { name: 'Order Desk Handover Notes', type: 'email' },
+      { name: 'Holiday Coverage Plan', type: 'email' },
+      { name: 'Posting Checklist Update', type: 'email' }
+    ]}
+  ],
+  taskGroups: [
+    { title: 'Orders & Fulfillment', tasks: [
+      { name: 'Web Orders', desc: 'Log daily received, posted, and follow-up order counts.', href: 'web-orders.html' },
+      { name: 'Manual Typing', desc: 'Manage manual orders from consultants, customer operations, and internal teams.' },
+      { name: 'LIND POP', desc: 'Manage POP requests inside the CRM Interior Design view.' },
+      { name: 'Sold Horn Certificate & Accessories', desc: 'Track accessory order requests for horn frames sold from the collection.' }
+    ]},
+    { title: 'Follow-Up & QA', tasks: [
+      { name: 'Follow Up', desc: 'Track open follow-ups and catch anything going stale.', href: 'follow-up.html', badge: 'attention' },
+      { name: 'Price Check', desc: 'Verify pricing before an order is confirmed.' }
+    ]},
+    { title: 'Campaigns & Growth', tasks: [
+      { name: 'Seasonal Drop Collection', desc: 'Manage the order drop tied to the current seasonal.' },
+      { name: 'Training Frames', desc: 'Track training frame requests end to end.' }
+    ]},
+    { title: 'Brand Ambassador', tasks: [
+      { name: 'Newly Hired Brand Ambassador', desc: 'Process orders for new-hire sample frames and accessories.' },
+      { name: 'Brand Ambassador Product Line Activation', desc: 'Activate account privileges for brand ambassadors (no orders required).' }
+    ]},
+    { title: 'Inventory & Lookup', tasks: [
+      { name: 'Barcode Lookup', desc: 'Find an exact barcode, search a messy description, or build an accessory UPC list.', href: 'barcode-lookup.html' }
+    ]}
+  ]
+};
+
+/* ---------- helpers ---------- */
+var toastEl = document.getElementById('toast');
+var toastTimer = null;
+function showToast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 2100);
+}
+
+function escapeHtml(str) {
+  return String(str == null ? '' : str).replace(/[&<>"']/g, function (c) {
+    return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+  });
+}
+
+var CASE_ICON = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 5.5C2 4.67 2.67 4 3.5 4H6l1 1.2h5.5c.83 0 1.5.67 1.5 1.5V11.5c0 .83-.67 1.5-1.5 1.5h-9C2.67 13 2 12.33 2 11.5V5.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>';
+var ICONS = {
+  word: '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 1.5h5.5L12 4v9.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-11a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M9.5 1.5V4a1 1 0 0 0 1 1H12" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M4.3 7.4l.9 3.6.9-2.7.9 2.7.9-3.6" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  excel: '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 1.5h5.5L12 4v9.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-11a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M9.5 1.5V4a1 1 0 0 0 1 1H12" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M4.4 7.6l3.2 3.6M7.6 7.6l-3.2 3.6" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>',
+  email: '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="1.5" y="3" width="13" height="10" rx="1.2" stroke="currentColor" stroke-width="1.2"/><path d="M2 4l6 5 6-5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  link: '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6.5 9.5l3-3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M6 5.2 7 4a2.3 2.3 0 0 1 3.3 3.3l-1 1M10 10.8 9 12a2.3 2.3 0 0 1-3.3-3.3l1-1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+};
+
+/* ---------- attention bar ---------- */
+(function renderAttention() {
+  var bar = document.getElementById('attentionBar');
+  var rows = [];
+  if (DEMO.summary.followUpsStale > 0) {
+    rows.push({
+      text: '<b>' + DEMO.summary.followUpsStale + '</b> follow-ups open 24h or more &mdash; needs attention',
+      href: 'follow-up.html'
+    });
+  }
+  if (DEMO.summary.pendingCasesStale > 0) {
+    rows.push({
+      text: '<b>' + DEMO.summary.pendingCasesStale + '</b> pending cases open 48h or more &mdash; needs attention',
+      href: ''
+    });
+  }
+  bar.innerHTML = rows.map(function (r) {
+    var link = r.href
+      ? '<a class="attention-link" href="' + r.href + '">Review now &rarr;</a>'
+      : '<button type="button" class="attention-link" data-missing>Review now &rarr;</button>';
+    return '<div class="attention-row"><span class="attention-dot" aria-hidden="true"></span>' +
+      '<span class="attention-text">' + r.text + '</span>' + link + '</div>';
+  }).join('');
+})();
+
+/* ---------- pending cases ---------- */
+(function renderCases() {
+  var list = document.getElementById('casesList');
+  var rows = DEMO.pendingCases.map(function (c) {
+    var d = new Date(c.createdDate + 'T00:00:00');
+    var label = isNaN(d.getTime()) ? c.createdDate
+      : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    var stale = DEMO.pendingCases.indexOf(c) < DEMO.summary.pendingCasesStale;
+    return '<div class="case-mini-row' + (stale ? ' is-stale' : '') + '">' +
+      '<span class="case-mini-icon">' + CASE_ICON + '</span>' +
+      '<div class="case-mini-main">' +
+        '<span class="case-mini-no pii">' + escapeHtml(c.caseNo) + '</span>' +
+        '<span class="case-mini-sub">' +
+          '<span class="case-mini-date">' + escapeHtml(label) + '</span>' +
+          '<span class="case-mini-crm">' + escapeHtml(c.viewFolder) + '</span>' +
+        '</span>' +
+      '</div>' +
+      (stale ? '<span class="case-mini-flag"><span class="case-mini-flag-dot"></span>48h+</span>' : '') +
+    '</div>';
+  }).join('');
+  list.innerHTML = rows;
+  document.getElementById('casesCountLabel').textContent =
+    DEMO.summary.pendingCases + ' entries';
+})();
+
+/* ---------- internal references ---------- */
+var refMenu = document.getElementById('refMenu');
+
+refMenu.innerHTML = DEMO.references.map(function (group, gi) {
+  return '<div class="ref-menu-item">' +
+    '<button type="button" class="ref-menu-trigger" data-group="' + gi + '" aria-expanded="false" aria-haspopup="true">' +
+      '<span class="ref-menu-icon ref-dd-icon-' + group.icon + '">' + ICONS[group.icon] + '</span>' +
+      '<span class="ref-menu-title">' + escapeHtml(group.title) + '</span>' +
+      '<span class="ref-menu-count">' + group.items.length + '</span>' +
+      '<span class="ref-menu-caret" aria-hidden="true">&#9662;</span>' +
+    '</button>' +
+    '<div class="ref-dropdown" id="refDropdown' + gi + '" role="menu">' +
+      group.items.map(function (item) {
+        return '<button type="button" class="ref-dd-item" role="menuitem" data-missing>' +
+          '<span class="ref-dd-icon ref-dd-icon-' + item.type + '">' + ICONS[item.type] + '</span>' +
+          '<span class="ref-dd-name">' + escapeHtml(item.name) + '</span>' +
+        '</button>';
+      }).join('') +
+    '</div>' +
+  '</div>';
+}).join('');
+
+var refTriggers = Array.prototype.slice.call(refMenu.querySelectorAll('.ref-menu-trigger'));
+function closeDropdowns(except) {
+  refTriggers.forEach(function (btn) {
+    if (btn === except) return;
+    btn.setAttribute('aria-expanded', 'false');
+    var dd = document.getElementById('refDropdown' + btn.dataset.group);
+    if (dd) dd.classList.remove('is-open');
+  });
+}
+refTriggers.forEach(function (btn) {
+  btn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    var dd = document.getElementById('refDropdown' + btn.dataset.group);
+    var open = btn.getAttribute('aria-expanded') === 'true';
+    closeDropdowns(btn);
+    btn.setAttribute('aria-expanded', String(!open));
+    if (dd) dd.classList.toggle('is-open', !open);
+  });
+});
+document.addEventListener('click', function () { closeDropdowns(null); });
+
+/* ---------- references search ---------- */
+var searchInput = document.getElementById('refSearchInput');
+var searchClear = document.getElementById('refSearchClear');
+var searchResults = document.getElementById('refSearchResults');
+
+function highlight(name, tokens) {
+  var html = escapeHtml(name);
+  tokens.slice().sort(function (a, b) { return b.length - a.length; }).forEach(function (t) {
+    if (!t) return;
+    var re = new RegExp('(' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig');
+    html = html.replace(re, function (m) {
+      return '<mark>' + m + '</mark>';
+    });
+  });
+  return html;
+}
+
+function runSearch(q) {
+  var query = q.trim();
+  searchClear.classList.toggle('show', query.length > 0);
+  if (!query) {
+    searchResults.classList.remove('show');
+    searchResults.innerHTML = '';
+    return;
+  }
+  searchResults.classList.add('show');
+  var tokens = query.toLowerCase().split(/\s+/).filter(Boolean);
+  var flat = [];
+  DEMO.references.forEach(function (group) {
+    group.items.forEach(function (item) { flat.push({ group: group, item: item }); });
+  });
+  var matches = flat.filter(function (row) {
+    var hay = (row.item.name + ' ' + row.group.title).toLowerCase();
+    return tokens.every(function (t) { return hay.indexOf(t) !== -1; });
+  });
+  if (!matches.length) {
+    searchResults.innerHTML = '<div class="ref-search-empty">No references match &ldquo;' + escapeHtml(query) + '&rdquo;</div>';
+    return;
+  }
+  searchResults.innerHTML = matches.map(function (row) {
+    return '<button type="button" class="ref-sr-item" role="option" data-missing>' +
+      '<span class="ref-dd-icon ref-dd-icon-' + row.item.type + '">' + ICONS[row.item.type] + '</span>' +
+      '<span class="ref-sr-main">' +
+        '<span class="ref-sr-name">' + highlight(row.item.name, tokens) + '</span>' +
+        '<span class="ref-sr-group">' + escapeHtml(row.group.title) + '</span>' +
+      '</span>' +
+    '</button>';
+  }).join('');
+}
+
+searchInput.addEventListener('input', function (e) { runSearch(e.target.value); });
+searchClear.addEventListener('click', function () {
+  searchInput.value = '';
+  runSearch('');
+  searchInput.focus();
+});
+searchInput.addEventListener('focus', function () {
+  if (searchInput.value.trim()) searchResults.classList.add('show');
+});
+document.addEventListener('click', function (e) {
+  if (!e.target.closest('.ref-search')) searchResults.classList.remove('show');
+});
+
+/* ---------- task cards ---------- */
+document.getElementById('taskGroups').innerHTML = DEMO.taskGroups.map(function (group) {
+  var cards = group.tasks.map(function (t) {
+    var badge = '';
+    if (t.href) {
+      badge = '<span class="task-badge demo">Open demo</span>';
+    } else if (t.badge === 'attention') {
+      badge = '<span class="task-badge">' + DEMO.summary.followUpsStale + ' need attention</span>';
+    }
+    var inner = '<span class="task-card-top"><span class="task-name">' + escapeHtml(t.name) + '</span>' +
+      badge + '</span><span class="task-desc">' + escapeHtml(t.desc) + '</span>';
+    if (t.href) {
+      return '<a class="task-card task-card--demo" href="' + t.href + '">' + inner + '</a>';
+    }
+    return '<button type="button" class="task-card" data-missing>' + inner + '</button>';
+  }).join('');
+  return '<div class="task-group"><div class="task-group-title">' + escapeHtml(group.title) + '</div>' +
+    '<div class="task-grid">' + cards + '</div></div>';
+}).join('');
+
+/* ---------- not-included cards ---------- */
+document.addEventListener('click', function (e) {
+  var el = e.target.closest('[data-missing]');
+  if (!el) return;
+  e.preventDefault();
+  closeDropdowns(null);
+  searchResults.classList.remove('show');
+  showToast('Not included in this demo');
+});
+</script>
+</body>
+</html>
