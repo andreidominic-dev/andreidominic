@@ -924,28 +924,99 @@ if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
   /* =========================================================
      Tools
      ========================================================= */
-  /* Bento showcase: one featured card for the core order systems, then
-     medium and small cards. Light surface, so every accent uses the dark
-     gold token that keeps AA contrast on ivory. */
-  .bento {margin-top: clamp(2.5rem, 5vw, 3.5rem); display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.85rem;}
-  .bento-card {position: relative; display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--card-border); border-radius: var(--radius-lg); box-shadow: var(--card-shadow); padding: clamp(1rem, 1.6vw, 1.35rem); transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);}
-  .bento-card:hover,
-  .bento-card:focus-within {border-color: var(--accent-border); box-shadow: var(--card-shadow), 0 0 0 1px var(--accent-border); transform: translateY(-2px);}
-  .bento-card--core .tool-tiles, .bento-card--ecom .tool-tiles {flex: 1; align-content: stretch;}
-  .bento-card--core {background: radial-gradient(120% 90% at 100% 0%, rgba(198, 168, 120, 0.16), transparent 60%), var(--card);}
-  .bento-head {display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.85rem;}
-  .bento-icon {flex: none; display: grid; place-items: center; width: 2.4rem; height: 2.4rem; border-radius: 11px; color: #7a5c2f; background: rgba(138, 106, 60, 0.10); border: 1px solid rgba(138, 106, 60, 0.22);}
-  .bento-icon .ico {width: 1.15rem; height: 1.15rem;}
-  .bento-head h3 {font-size: 0.95rem; font-weight: 600; letter-spacing: -0.012em; color: var(--text);}
-  .bento-head p {margin-top: 0.22rem; font-size: 0.66rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-muted);}
-  .tool-tiles {list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem;}
-  .tile {display: flex; align-items: flex-start; gap: 0.65rem; padding: 0.6rem 0.65rem; border-radius: var(--radius-sm); background: var(--surface-2); border: 1px solid var(--border);}
-  .tile-icon {flex: none; display: grid; place-items: center; width: 1.7rem; height: 1.7rem; border-radius: var(--radius-sm); background: var(--surface-3); color: var(--accent-ink); font-size: 0.52rem; font-weight: 700; letter-spacing: 0.02em;}
-  .tile h4 {display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 600; letter-spacing: -0.008em; color: var(--text);}
-  .tile p {margin-top: 0.12rem; font-size: 0.75rem; line-height: 1.45; color: var(--text-muted);}
-  .tile-badge {flex: none; font-size: 0.575rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.22rem 0.45rem; border-radius: var(--radius-pill); white-space: nowrap; color: var(--accent-ink); background: var(--surface-3); border: 1px solid var(--border-strong);}
-  .tile-badge--training {color: var(--text-muted); background: var(--surface-2); border-color: var(--border);}
-  .bento-note {margin-top: clamp(1.5rem, 3vw, 2rem); max-width: 62ch; font-size: 0.8rem; line-height: 1.6; color: var(--text-muted);}
+  /* =========================================================
+     Tools — logo rail
+     A single translate3d moves the track; the panel below keeps
+     its space reserved so opening it never shifts the page.
+     ========================================================= */
+  .toolrail { margin-top: clamp(2.5rem, 5vw, 3.5rem); }
+  .toolrail-stage { position: relative; }
+  .toolrail-viewport {
+    position: relative; overflow: hidden; touch-action: pan-y;
+    contain: layout paint; padding-block: 2.75rem 0.5rem;
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 7%, #000 93%, transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0, #000 7%, #000 93%, transparent 100%);
+  }
+  .toolrail-track { display: flex; align-items: center; width: max-content; margin: 0; padding: 0; list-style: none; will-change: transform; }
+  .toolrail-item { position: relative; flex: none; padding-inline: 0.75rem; }
+  .toolrail-btn {
+    display: block; width: 88px; height: 88px; padding: 0; border: 0; border-radius: 18px;
+    background: none; cursor: pointer; -webkit-tap-highlight-color: transparent;
+    transition: transform var(--dur) var(--ease), opacity var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+  }
+  .toolrail-btn img { display: block; width: 88px; height: 88px; border-radius: 14px; filter: drop-shadow(0 5px 10px rgba(62, 49, 28, 0.18)); }
+  .toolrail-btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 4px; }
+  @media (hover: hover) {
+    .toolrail-btn:hover { transform: scale(1.06); }
+  }
+  .toolrail.is-active .toolrail-btn { opacity: 0.55; }
+  .toolrail.is-active .toolrail-btn.is-selected { opacity: 1; box-shadow: 0 0 0 2px var(--accent); }
+
+  /* The name bubble lives inside its own rail item, so it rides the same
+     translate3d as the logo and can never lag behind it. The wrapper
+     keeps 2.75rem of top padding so a bubble is never clipped. */
+  .toolrail-tip {
+    position: absolute; left: 50%; bottom: 100%; z-index: 4;
+    margin-bottom: 10px; transform: translateX(-50%) translateY(3px);
+    padding: 0.4rem 0.65rem; border-radius: var(--radius-sm);
+    background: #111315; color: #f5f5f2; font-size: var(--fs-xs); line-height: 1.2; letter-spacing: 0.02em;
+    white-space: nowrap; pointer-events: none; opacity: 0; visibility: hidden;
+    transition: opacity 0.18s var(--ease), transform 0.18s var(--ease), visibility 0s linear 0.18s;
+    box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.7);
+  }
+  .toolrail-tip::after { content: ""; position: absolute; left: 50%; bottom: -3px; width: 7px; height: 7px; margin-left: -3.5px; transform: rotate(45deg); background: inherit; }
+  @media (hover: hover) {
+    .toolrail-tip.is-visible { opacity: 1; visibility: visible; transform: translateX(-50%); transition-delay: 0s; }
+  }
+
+  /* No JavaScript: show the marks as a static wrapping grid, list below. */
+  html:not(.js) .toolrail-track { flex-wrap: wrap; width: auto; justify-content: flex-start; row-gap: 0.35rem; }
+  html:not(.js) .toolrail-viewport { overflow: visible; contain: none; -webkit-mask-image: none; mask-image: none; }
+  html:not(.js) .tool-detail { display: none; }
+  .toolrail-hint { margin: 0.9rem 0 0; font-size: var(--fs-small); line-height: 1.5; color: var(--text-muted); }
+  .toolrail-hint__static { display: none; }
+  @media (hover: none), (prefers-reduced-motion: reduce) {
+    .toolrail-hint__motion { display: none; }
+    .toolrail-hint__static { display: inline; }
+  }
+  html:not(.js) .toolrail-hint__motion { display: none; }
+  html:not(.js) .toolrail-hint__static { display: inline; }
+  .toolrail-fallback { display: grid; gap: 0.5rem; margin: 1.5rem 0 0; padding-left: 1.1rem; font-size: var(--fs-small); line-height: 1.6; color: var(--text-muted); }
+  .toolrail-fallback strong { color: var(--text); font-weight: 600; }
+  .toolrail-fallback em { font-style: normal; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
+
+  .tool-detail { --rail-panel-h: 8.75rem; position: relative; margin-top: clamp(1.25rem, 2.5vw, 1.75rem); }
+  .tool-detail-card {
+    position: relative; display: flex; align-items: flex-start; gap: 1rem;
+    min-height: var(--rail-panel-h); padding: 1.15rem 3.6rem 1.15rem 1.15rem;
+    background: var(--card); border: 1px solid var(--card-border); border-radius: var(--radius-lg); box-shadow: var(--card-shadow);
+    opacity: 0; visibility: hidden; transform: translateY(10px);
+    transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease-out), visibility 0s linear var(--dur);
+  }
+  .tool-detail.is-open .tool-detail-card { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+  .tool-detail-logo { flex: none; width: 56px; height: 56px; border-radius: 11px; }
+  .tool-detail-body { flex: 1 1 auto; min-width: 0; }
+  .tool-detail-head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.45rem 0.6rem; }
+  .tool-detail-name { font-size: 1.02rem; font-weight: 600; letter-spacing: -0.015em; color: var(--text); }
+  .tool-detail-badge { flex: none; padding: 0.24rem 0.5rem; border-radius: var(--radius-pill); font-size: 0.575rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-ink); background: var(--surface-3); border: 1px solid var(--border-strong); }
+  .tool-detail-badge--training { color: var(--text-muted); background: var(--surface-2); border-color: var(--border); }
+  .tool-detail-badge[hidden] { display: none; }
+  .tool-detail-desc { margin-top: 0.4rem; max-width: 64ch; font-size: var(--fs-small); line-height: 1.6; color: var(--text-muted); }
+  .tool-detail-close { position: absolute; top: 0.55rem; right: 0.55rem; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border-radius: var(--radius-pill); border: 1px solid var(--border); background: var(--surface-2); color: var(--text); cursor: pointer; transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease); }
+  .tool-detail-close svg { width: 1rem; height: 1rem; }
+  .tool-detail-close:hover { color: var(--accent); border-color: var(--accent-border); }
+  .tool-detail-close:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 3px; }
+  @media (max-width: 767px) {
+    /* Narrow cards wrap the description onto more lines; reserve that height up front. */
+    .tool-detail { --rail-panel-h: 13.5rem; }
+  }
+  @media (max-width: 479px) {
+    /* The longest description needs more room than 13.5rem on small handsets. */
+    .tool-detail { --rail-panel-h: 22rem; }
+  }
+  @media (max-width: 359px) {
+    .tool-detail { --rail-panel-h: 28rem; }
+  }
   /* =========================================================
      Contact
      ========================================================= */
@@ -1030,8 +1101,11 @@ if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
     .hero-line > span { animation: none; transform: none; }
     .hero-lede, .hero-actions { animation: none; opacity: 1; }
     .status-dot::after, .scroll-cue i::after { animation: none; }
-    .preview-inner, .project, .service, .bento-card, .tile { transition: none !important; }
-    .bento-card:hover, .bento-card:focus-within { transform: none; }
+    .preview-inner, .project, .service { transition: none !important; }
+    .toolrail-track { transform: none !important; flex-wrap: wrap; justify-content: center; width: auto; row-gap: 0.35rem; }
+    .toolrail-item[data-clone] { display: none; }
+    .toolrail-viewport { contain: none; -webkit-mask-image: none; mask-image: none; }
+    .toolrail-btn { transition: none !important; }
     .carousel-track, .lightbox-panel, .lightbox-backdrop, .lightbox-img { transition: none !important; }
   }
 
@@ -1049,9 +1123,6 @@ if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
   @media (min-width: 760px) {
     .about-grid { grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); align-items: start; }
     .services-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .bento-card--core .tool-tiles,
-    .bento-card--report .tool-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .bento-card--build .tool-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .bullets { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   @media (min-width: 900px) and (max-height: 860px) {
@@ -1075,15 +1146,6 @@ if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
     .nav-links { display: flex; }
     .menu-btn { display: none; }
     .services-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .bento { grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 0.95rem; }
-    .bento-card--core { grid-column: span 8; }
-    .bento-card--comm { grid-column: span 4; }
-    .bento-card--report { grid-column: span 8; }
-    .bento-card--ecom { grid-column: span 4; }
-    .bento-card--build { grid-column: span 12; }
-    .bento-card--core .tool-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .bento-card--report .tool-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .bento-card--build .tool-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     .exp-grid { grid-template-columns: 15rem minmax(0, 1fr); gap: clamp(3rem, 6vw, 6rem); }
     .exp-rail { display: block; }
     .exp-rail .eyebrow { position: sticky; top: 7rem; }
@@ -1691,85 +1753,143 @@ if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
       <h2 class="display" data-reveal style="--i:1; margin-top:1.5rem; max-width:18ch">The stack I work in.</h2>
       <p class="lede" data-reveal style="--i:2; max-width:52ch">The systems the order cycle runs on, the tools around them, and the ones I&rsquo;m training on.</p>
 
-      <div class="bento">
-      <article class="bento-card bento-card--core" aria-labelledby="tools-core" data-reveal style="--i:0">
-        <header class="bento-head">
-          <span class="bento-icon" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24"><use href="#i-box"/></svg></span>
-          <div>
-            <h3 id="tools-core">Core order systems</h3>
-            <p>3 systems · daily use</p>
+      <div class="toolrail" id="toolsRail" data-toolrail>
+        <div class="toolrail-stage" data-reveal>
+          <div class="toolrail-viewport" role="group" aria-roledescription="carousel" aria-label="Tools and systems" data-rail-viewport>
+            <ul class="toolrail-track" data-rail-track>
+              <li class="toolrail-item" data-name="SAP" data-badge="Daily use" data-desc="My main system for high-volume international orders. I enter and release them within SLA, spot discrepancies and workflow exceptions, and correct the transaction.">
+                <button type="button" class="toolrail-btn" data-tool="sap" data-idx="0" aria-label="SAP">
+                  <img src="assets/tools/ink/sap.png" alt="" width="88" height="88" loading="lazy" decoding="async">
+                </button>
+              </li>
+              <li class="toolrail-item" data-name="Microsoft Dynamics AX" data-badge="Daily use" data-desc="Where I check an order before it ships. I verify details, pricing and product configuration first, so errors are caught before release, not after the customer sees them.">
+                <button type="button" class="toolrail-btn" data-tool="dynamics-ax" data-idx="1" aria-label="Microsoft Dynamics AX">
+                  <img src="assets/tools/ink/dynamics-ax.png" alt="" width="88" height="88" loading="lazy" decoding="async">
+                </button>
+              </li>
+              <li class="toolrail-item" data-name="Microsoft Dynamics CRM" data-badge="Daily use" data-desc="I keep customer and order records accurate and current, so every follow-up starts from correct information.">
+                <button type="button" class="toolrail-btn" data-tool="dynamics-crm" data-idx="2" aria-label="Microsoft Dynamics CRM">
+                  <img src="assets/tools/ink/dynamics-crm.png" alt="" width="88" height="88" loading="lazy" decoding="async">
+                </button>
+              </li>
+              <li class="toolrail-item" data-name="Microsoft Outlook" data-badge="Daily use" data-desc="How I write to international accounts: clear replies on configurations, sponsor frame requests, product clarifications, warranty cases and invoicing.">
+                <button type="button" class="toolrail-btn" data-tool="outlook" data-idx="3" aria-label="Microsoft Outlook">
+                  <img src="assets/tools/ink/outlook.png" alt="" width="88" height="88" loading="lazy" decoding="async">
+                </button>
+              </li>
+              <li class="toolrail-item" data-name="Microsoft Teams" data-badge="Daily use" data-desc="Where I coordinate with Sales, Production Planning, Technical Support and Customer Service across markets, to resolve order issues quickly and keep deliveries on time.">
+                <button type="button" class="toolrail-btn" data-tool="teams" data-idx="4" aria-label="Microsoft Teams">
+                  <img src="assets/tools/ink/teams.png" alt="" width="88" height="88" loading="lazy" decoding="async">
+                </button>
+              </li>
+              <li class="toolrail-item" data-name="Microsoft Excel" data-desc="My tool for trackers and reporting: status reports to management, tracking sheets that improve order visibility, and the Excel sync behind my Order Management Tracker.">
+                <button type="button" class="toolrail-btn" data-tool="excel" data-idx="5" aria-label="Microsoft Excel">
+                  <img src="assets/tools/ink/excel.png" alt="" width="88" height="88" loading="lazy" decoding="async">
+                </button>
+              </li>
+              <li class="toolrail-item" data-name="Microsoft Word" data-desc="I write process guides and SOPs in it, so steps are documented and a handover is simple.">
+                <button type="button" class="toolrail-btn" data-tool="word" data-idx="6" aria-label="Microsoft Word">
+                  <img src="assets/tools/ink/word.png" alt="" width="88" height="88" loading="lazy" decoding="async">
+                </button>
+              </li>
+              <li class="toolrail-item" data-name="Microsoft PowerPoint" data-desc="I use it to turn operational data into short, clear summaries and presentations.">
+                <button type="button" class="toolrail-btn" data-tool="powerpoint" data-idx="7" aria-label="Microsoft PowerPoint">
+                  <img src="assets/tools/ink/powerpoint.png" alt="" width="88" height="88" loading="lazy" decoding="async">
+                </button>
+              </li>
+              <li class="toolrail-item" data-name="Google Sheets" data-desc="Shared spreadsheets for tracking and light reporting that teammates can open and update with me.">
+                <button type="button" class="toolrail-btn" data-tool="google-sheets" data-idx="8" aria-label="Google Sheets">
+                  <img src="assets/tools/ink/google-sheets.png" alt="" width="88" height="88" loading="lazy" decoding="async">
+                </button>
+              </li>
+              <li class="toolrail-item" data-name="Notion" data-desc="An organized workspace for notes, checklists and process documentation.">
+                <button type="button" class="toolrail-btn" data-tool="notion" data-idx="9" aria-label="Notion">
+                  <img src="assets/tools/ink/notion.png" alt="" width="88" height="88" loading="lazy" decoding="async">
+                </button>
+              </li>
+              <li class="toolrail-item" data-name="Microsoft Copilot" data-desc="An AI assistant that helps me draft and polish written work faster. I review every result before using it.">
+                <button type="button" class="toolrail-btn" data-tool="copilot" data-idx="10" aria-label="Microsoft Copilot">
+                  <img src="assets/tools/ink/copilot.png" alt="" width="88" height="88" loading="lazy" decoding="async">
+                </button>
+              </li>
+              <li class="toolrail-item" data-name="Shopify" data-badge="Training" data-desc="A practice store from my 8-week Shopify Operations program: 5 products, 4 policy pages and 3 test orders, built on simulated data.">
+                <button type="button" class="toolrail-btn" data-tool="shopify" data-idx="11" aria-label="Shopify">
+                  <img src="assets/tools/ink/shopify.png" alt="" width="88" height="88" loading="lazy" decoding="async">
+                </button>
+              </li>
+              <li class="toolrail-item" data-name="Product import CSVs" data-badge="Training" data-desc="Messy supplier price lists cleaned into Shopify-style import files under a written data standard (SKUs, weights, UPC check digits, duplicates). On simulated data, a second-pass review cut errors from about 7% to 1.7%.">
+                <button type="button" class="toolrail-btn" data-tool="csv" data-idx="12" aria-label="Product import CSVs">
+                  <img src="assets/tools/ink/csv.png" alt="" width="88" height="88" loading="lazy" decoding="async">
+                </button>
+              </li>
+              <li class="toolrail-item" data-name="HTML" data-desc="The structure behind the browser tools I build: my Order Management Tracker, my Barcode Lookup, and this portfolio.">
+                <button type="button" class="toolrail-btn" data-tool="html" data-idx="13" aria-label="HTML">
+                  <img src="assets/tools/ink/html.png" alt="" width="88" height="88" loading="lazy" decoding="async">
+                </button>
+              </li>
+              <li class="toolrail-item" data-name="CSS" data-desc="Styling that keeps those tools clear, consistent and responsive on any screen.">
+                <button type="button" class="toolrail-btn" data-tool="css" data-idx="14" aria-label="CSS">
+                  <img src="assets/tools/ink/css.png" alt="" width="88" height="88" loading="lazy" decoding="async">
+                </button>
+              </li>
+              <li class="toolrail-item" data-name="JavaScript" data-desc="The logic behind them: order tracking, process-time calculations, bulk barcode matching and Excel sync.">
+                <button type="button" class="toolrail-btn" data-tool="javascript" data-idx="15" aria-label="JavaScript">
+                  <img src="assets/tools/ink/javascript.png" alt="" width="88" height="88" loading="lazy" decoding="async">
+                </button>
+              </li>
+              <li class="toolrail-item" data-name="Adobe Photoshop" data-desc="Image editing and cleanup for visuals and product images.">
+                <button type="button" class="toolrail-btn" data-tool="photoshop" data-idx="16" aria-label="Adobe Photoshop">
+                  <img src="assets/tools/ink/photoshop.png" alt="" width="88" height="88" loading="lazy" decoding="async">
+                </button>
+              </li>
+            </ul>
           </div>
-        </header>
-        <ul class="tool-tiles">
-          <li class="tile"><span class="tile-icon" aria-hidden="true">SAP</span><div class="tile-text"><h4>SAP <span class="tile-badge">Daily use</span></h4><p>Order processing and corrective actions on transactions</p></div></li>
-          <li class="tile"><span class="tile-icon" aria-hidden="true">AX</span><div class="tile-text"><h4>Dynamics AX <span class="tile-badge">Daily use</span></h4><p>Pre-checking order details, pricing and configurations before release</p></div></li>
-          <li class="tile"><span class="tile-icon" aria-hidden="true">CRM</span><div class="tile-text"><h4>Dynamics CRM <span class="tile-badge">Daily use</span></h4><p>Customer and order records</p></div></li>
-        </ul>
-      </article>
+        </div>
 
-      <article class="bento-card bento-card--comm" aria-labelledby="tools-comm" data-reveal style="--i:1">
-        <header class="bento-head">
-          <span class="bento-icon" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24"><use href="#i-mail"/></svg></span>
-          <div>
-            <h3 id="tools-comm">Communication & collaboration</h3>
-            <p>2 tools · daily use</p>
-          </div>
-        </header>
-        <ul class="tool-tiles">
-          <li class="tile"><span class="tile-icon" aria-hidden="true">OUT</span><div class="tile-text"><h4>Microsoft Outlook <span class="tile-badge">Daily use</span></h4><p>Order correspondence with international accounts — configurations, warranty, invoicing</p></div></li>
-          <li class="tile"><span class="tile-icon" aria-hidden="true">TEAMS</span><div class="tile-text"><h4>Microsoft Teams <span class="tile-badge">Daily use</span></h4><p>Coordination with Sales, Production Planning, Technical Support and Customer Service</p></div></li>
-        </ul>
-      </article>
+        <p class="toolrail-hint">
+          <span class="toolrail-hint__motion">Click a logo to pause and see how I use it.</span>
+          <span class="toolrail-hint__static">Select a logo to see how I use it.</span>
+        </p>
 
-      <article class="bento-card bento-card--report" aria-labelledby="tools-report" data-reveal style="--i:2">
-        <header class="bento-head">
-          <span class="bento-icon" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24"><use href="#i-clipboard"/></svg></span>
-          <div>
-            <h3 id="tools-report">Reporting & productivity</h3>
-            <p>6 tools</p>
+        <div class="tool-detail" data-rail-panel aria-live="polite">
+          <div class="tool-detail-card" data-rail-card>
+            <img class="tool-detail-logo" data-rail-logo src="assets/tools/ink/sap.png" alt="" width="56" height="56" decoding="async">
+            <div class="tool-detail-body">
+              <div class="tool-detail-head">
+                <h3 class="tool-detail-name" data-rail-name></h3>
+                <span class="tool-detail-badge" data-rail-badge hidden></span>
+              </div>
+              <p class="tool-detail-desc" data-rail-desc></p>
+            </div>
+            <button type="button" class="tool-detail-close" data-rail-close aria-label="Close tool details">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg>
+            </button>
           </div>
-        </header>
-        <ul class="tool-tiles">
-          <li class="tile"><span class="tile-icon" aria-hidden="true">XLS</span><div class="tile-text"><h4>Microsoft Excel <span class="tile-badge">Daily use</span></h4><p>Trackers, status reports to management, and the sync behind my Order Tracker</p></div></li>
-          <li class="tile"><!-- TODO_CONFIRM: usage line for Google Sheets, and whether it is daily use --><span class="tile-icon" aria-hidden="true">GS</span><div class="tile-text"><h4>Google Sheets</h4><p>Spreadsheets I use alongside Excel</p></div></li>
-          <li class="tile"><!-- TODO_CONFIRM: usage line for Word, and whether it is daily use --><span class="tile-icon" aria-hidden="true">DOC</span><div class="tile-text"><h4>Word</h4><p>Document drafting and formatting</p></div></li>
-          <li class="tile"><!-- TODO_CONFIRM: usage line for PowerPoint, and whether it is daily use --><span class="tile-icon" aria-hidden="true">PPT</span><div class="tile-text"><h4>PowerPoint</h4><p>Presentation decks</p></div></li>
-          <li class="tile"><!-- TODO_CONFIRM: usage line for Notion, and whether it is daily use --><span class="tile-icon" aria-hidden="true">NOTE</span><div class="tile-text"><h4>Notion</h4><p>Notes and reference pages</p></div></li>
-          <li class="tile"><!-- TODO_CONFIRM: usage line for Copilot, and whether it is daily use --><span class="tile-icon" aria-hidden="true">COP</span><div class="tile-text"><h4>Microsoft Copilot</h4><p>Drafting and summarising inside Microsoft 365</p></div></li>
-        </ul>
-      </article>
+        </div>
 
-      <article class="bento-card bento-card--ecom" aria-labelledby="tools-ecom" data-reveal style="--i:3">
-        <header class="bento-head">
-          <span class="bento-icon" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24"><use href="#i-store"/></svg></span>
-          <div>
-            <h3 id="tools-ecom">E-commerce</h3>
-            <p>2 tools · training</p>
-          </div>
-        </header>
-        <ul class="tool-tiles">
-          <li class="tile"><span class="tile-icon" aria-hidden="true">SHOP</span><div class="tile-text"><h4>Shopify <span class="tile-badge tile-badge--training">Training</span></h4><p>Practice store: 5 products, 4 policy pages, 3 test orders — training only</p></div></li>
-          <li class="tile"><span class="tile-icon" aria-hidden="true">CSV</span><div class="tile-text"><h4>Product import CSVs <span class="tile-badge tile-badge--training">Training</span></h4><p>Bulk product data for Shopify uploads</p></div></li>
-        </ul>
-      </article>
-
-      <article class="bento-card bento-card--build" aria-labelledby="tools-build" data-reveal style="--i:4">
-        <header class="bento-head">
-          <span class="bento-icon" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24"><use href="#i-layers"/></svg></span>
-          <div>
-            <h3 id="tools-build">Build & design</h3>
-            <p>4 tools</p>
-          </div>
-        </header>
-        <ul class="tool-tiles">
-          <li class="tile"><span class="tile-icon" aria-hidden="true">HTML</span><div class="tile-text"><h4>HTML <span class="tile-badge">Daily use</span></h4><p>Markup for this portfolio and its demos</p></div></li>
-          <li class="tile"><span class="tile-icon" aria-hidden="true">CSS</span><div class="tile-text"><h4>CSS <span class="tile-badge">Daily use</span></h4><p>Layout, theming and responsive styling</p></div></li>
-          <li class="tile"><span class="tile-icon" aria-hidden="true">JS</span><div class="tile-text"><h4>JavaScript <span class="tile-badge">Daily use</span></h4><p>Interaction on this site — carousel, modal and filters</p></div></li>
-          <li class="tile"><!-- TODO_CONFIRM: usage line for Photoshop, and whether it is daily use or training --><span class="tile-icon" aria-hidden="true">PS</span><div class="tile-text"><h4>Photoshop</h4><p>Image preparation and retouching</p></div></li>
-        </ul>
-      </article>
+        <noscript>
+          <ul class="toolrail-fallback">
+            <li><strong>SAP</strong> <em>Daily use</em> — My main system for high-volume international orders. I enter and release them within SLA, spot discrepancies and workflow exceptions, and correct the transaction.</li>
+            <li><strong>Microsoft Dynamics AX</strong> <em>Daily use</em> — Where I check an order before it ships. I verify details, pricing and product configuration first, so errors are caught before release, not after the customer sees them.</li>
+            <li><strong>Microsoft Dynamics CRM</strong> <em>Daily use</em> — I keep customer and order records accurate and current, so every follow-up starts from correct information.</li>
+            <li><strong>Microsoft Outlook</strong> <em>Daily use</em> — How I write to international accounts: clear replies on configurations, sponsor frame requests, product clarifications, warranty cases and invoicing.</li>
+            <li><strong>Microsoft Teams</strong> <em>Daily use</em> — Where I coordinate with Sales, Production Planning, Technical Support and Customer Service across markets, to resolve order issues quickly and keep deliveries on time.</li>
+            <li><strong>Microsoft Excel</strong> — My tool for trackers and reporting: status reports to management, tracking sheets that improve order visibility, and the Excel sync behind my Order Management Tracker.</li>
+            <li><strong>Microsoft Word</strong> — I write process guides and SOPs in it, so steps are documented and a handover is simple.</li>
+            <li><strong>Microsoft PowerPoint</strong> — I use it to turn operational data into short, clear summaries and presentations.</li>
+            <li><strong>Google Sheets</strong> — Shared spreadsheets for tracking and light reporting that teammates can open and update with me.</li>
+            <li><strong>Notion</strong> — An organized workspace for notes, checklists and process documentation.</li>
+            <li><strong>Microsoft Copilot</strong> — An AI assistant that helps me draft and polish written work faster. I review every result before using it.</li>
+            <li><strong>Shopify</strong> <em>Training</em> — A practice store from my 8-week Shopify Operations program: 5 products, 4 policy pages and 3 test orders, built on simulated data.</li>
+            <li><strong>Product import CSVs</strong> <em>Training</em> — Messy supplier price lists cleaned into Shopify-style import files under a written data standard (SKUs, weights, UPC check digits, duplicates). On simulated data, a second-pass review cut errors from about 7% to 1.7%.</li>
+            <li><strong>HTML</strong> — The structure behind the browser tools I build: my Order Management Tracker, my Barcode Lookup, and this portfolio.</li>
+            <li><strong>CSS</strong> — Styling that keeps those tools clear, consistent and responsive on any screen.</li>
+            <li><strong>JavaScript</strong> — The logic behind them: order tracking, process-time calculations, bulk barcode matching and Excel sync.</li>
+            <li><strong>Adobe Photoshop</strong> — Image editing and cleanup for visuals and product images.</li>
+          </ul>
+        </noscript>
       </div>
-      <p class="bento-note" data-reveal style="--i:5">Badges show how I use a tool today, not how good I am with it.</p>
+
     </div>
   </section>
 
@@ -2491,6 +2611,366 @@ if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
     }
     tick();
     setInterval(tick, 60000);
+  })();
+</script>
+<script>
+  /* Tools & systems — logo rail: seamless loop, hover names, detail panel */
+  (function () {
+    var root = document.querySelector('[data-toolrail]');
+    if (!root) return;
+    var viewport = root.querySelector('[data-rail-viewport]');
+    var track = root.querySelector('[data-rail-track]');
+    var panel = root.querySelector('[data-rail-panel]');
+    var panelLogo = root.querySelector('[data-rail-logo]');
+    var panelName = root.querySelector('[data-rail-name]');
+    var panelBadge = root.querySelector('[data-rail-badge]');
+    var panelDesc = root.querySelector('[data-rail-desc]');
+    var closeBtn = root.querySelector('[data-rail-close]');
+    if (!viewport || !track) return;
+
+    var reduceMQ = window.matchMedia('(prefers-reduced-motion: reduce)');
+    var hoverMQ = window.matchMedia('(hover: hover) and (pointer: fine)');
+    var SPEED = 40;
+    var originals = Array.prototype.slice.call(track.querySelectorAll('.toolrail-item')).filter(function (li) {
+      return !li.hasAttribute('data-clone');
+    });
+    if (!originals.length) return;
+    var tools = originals.map(function (li) {
+      var b = li.querySelector('.toolrail-btn');
+      return {
+        id: b.getAttribute('data-tool'),
+        name: li.getAttribute('data-name') || '',
+        badge: li.getAttribute('data-badge') || '',
+        desc: li.getAttribute('data-desc') || ''
+      };
+    });
+    var byId = {};
+    tools.forEach(function (t) { byId[t.id] = t; });
+
+    var reduce = reduceMQ.matches;
+    var fine = hoverMQ.matches;
+    var pitch = 0, setW = 0, x = 0, copies = 1;
+    var animating = false, rafId = 0, lastT = 0;
+    /* focusWithin is the keyboard-only exception: a focused logo holds the
+       rail still so it can be read and activated. Nothing else does. */
+    var focusWithin = false, inView = false;
+    var selected = null, lastBtn = null, keyboard = false;
+
+    function closestBtn(node) { return node && node.closest ? node.closest('.toolrail-btn') : null; }
+    function closestItem(node) { return node && node.closest ? node.closest('.toolrail-item') : null; }
+    function allButtons() { return Array.prototype.slice.call(track.querySelectorAll('.toolrail-btn')); }
+
+    /* Each logo carries its own name bubble, so the bubble is part of the
+       moving track and travels exactly with the logo. Clones copy it too. */
+    function ensureTips() {
+      originals.forEach(function (li) {
+        if (li.querySelector('.toolrail-tip')) return;
+        var span = document.createElement('span');
+        span.className = 'toolrail-tip';
+        span.setAttribute('aria-hidden', 'true');
+        span.textContent = li.getAttribute('data-name') || '';
+        li.appendChild(span);
+      });
+    }
+
+    function measure() {
+      var first = track.querySelector('.toolrail-item');
+      pitch = first ? first.getBoundingClientRect().width : 0;
+      setW = pitch * tools.length;
+    }
+
+    function apply() { track.style.transform = 'translate3d(' + x.toFixed(2) + 'px, 0, 0)'; }
+
+    function wrap() {
+      if (!setW) return;
+      x = x % setW;
+      if (x > 0) x -= setW;
+    }
+
+    function dropClones() {
+      Array.prototype.slice.call(track.querySelectorAll('.toolrail-item[data-clone]')).forEach(function (li) {
+        li.parentNode.removeChild(li);
+      });
+    }
+
+    function makeClone(li) {
+      var clone = li.cloneNode(true);
+      clone.setAttribute('data-clone', '');
+      clone.setAttribute('aria-hidden', 'true');
+      Array.prototype.slice.call(clone.childNodes).forEach(function (n) { if (n.nodeType === 8) clone.removeChild(n); });
+      Array.prototype.slice.call(clone.querySelectorAll('button')).forEach(function (b) {
+        b.setAttribute('tabindex', '-1');
+        b.setAttribute('aria-hidden', 'true');
+      });
+      return clone;
+    }
+
+    function build() {
+      dropClones();
+      if (reduce) { copies = 1; apply(); return; }
+      measure();
+      if (!pitch || !setW) return;
+      var viewW = viewport.clientWidth || 0;
+      copies = Math.max(2, Math.ceil((viewW * 2) / setW) + 1);
+      /* One set behind the originals lets a focused early logo be centred
+         without running out of track to its left. */
+      var before = document.createDocumentFragment();
+      originals.forEach(function (li) { before.appendChild(makeClone(li)); });
+      track.insertBefore(before, track.firstChild);
+      for (var c = 1; c < copies; c++) {
+        var after = document.createDocumentFragment();
+        originals.forEach(function (li) { after.appendChild(makeClone(li)); });
+        track.appendChild(after);
+      }
+    }
+
+    function frame(now) {
+      rafId = 0;
+      if (!animating) return;
+      if (!lastT) lastT = now;
+      var dt = now - lastT;
+      lastT = now;
+      if (dt > 80) dt = 80;
+      if (dt > 0) {
+        x += (SPEED * dt) / 1000;
+        wrap();
+        apply();
+      }
+      rafId = window.requestAnimationFrame(frame);
+    }
+
+    function start() {
+      if (animating || reduce || !setW) return;
+      animating = true;
+      lastT = 0;
+      if (!rafId) rafId = window.requestAnimationFrame(frame);
+    }
+
+    function stop() {
+      animating = false;
+      if (rafId) { window.cancelAnimationFrame(rafId); rafId = 0; }
+      lastT = 0;
+    }
+
+    function running() {
+      return !reduce && inView && !document.hidden && !focusWithin && !selected;
+    }
+    function sync() { if (running()) start(); else stop(); }
+
+    function paintSelection(id) {
+      root.classList.toggle('is-active', !!id);
+      allButtons().forEach(function (b) {
+        b.classList.toggle('is-selected', !!id && b.getAttribute('data-tool') === id);
+      });
+    }
+
+    function openTool(id, from) {
+      var data = byId[id];
+      if (!data) return;
+      selected = id;
+      if (from) lastBtn = from;
+      var img = lastBtn ? lastBtn.querySelector('img') : null;
+      if (img && img.getAttribute('src')) panelLogo.setAttribute('src', img.getAttribute('src'));
+      panelName.textContent = data.name;
+      panelDesc.textContent = data.desc;
+      panelBadge.textContent = data.badge;
+      panelBadge.hidden = !data.badge;
+      panelBadge.classList.toggle('tool-detail-badge--training', data.badge === 'Training');
+      paintSelection(id);
+      panel.classList.add('is-open');
+      hideTips();
+      sync();
+    }
+
+    function closeTool(restore) {
+      if (!selected) return;
+      var from = lastBtn;
+      selected = null;
+      panel.classList.remove('is-open');
+      paintSelection(null);
+      sync();
+      if (restore) {
+        var idx = from ? parseInt(from.getAttribute('data-idx'), 10) : 0;
+        var target = originals[idx] && originals[idx].querySelector('.toolrail-btn');
+        if (target) target.focus();
+      }
+    }
+
+    function showTip(item) {
+      if (!fine || selected || !item) return;
+      var bubble = item.querySelector('.toolrail-tip');
+      if (bubble) bubble.classList.add('is-visible');
+    }
+    function hideTip(item) {
+      if (!item) return;
+      var bubble = item.querySelector('.toolrail-tip');
+      if (bubble) bubble.classList.remove('is-visible');
+    }
+    function hideTips() {
+      Array.prototype.slice.call(track.querySelectorAll('.toolrail-tip.is-visible')).forEach(function (bubble) {
+        bubble.classList.remove('is-visible');
+      });
+    }
+
+    function reveal(btn) {
+      if (reduce || !pitch) return;
+      var v = viewport.getBoundingClientRect();
+      var r = btn.getBoundingClientRect();
+      if (r.left >= v.left + 10 && r.right <= v.right - 10) return;
+      var idx = parseInt(btn.getAttribute('data-idx'), 10) || 0;
+      /* Centre the focused logo itself, not a copy of it. A positive x is
+         allowed here because the track carries a set behind the originals. */
+      var at = -(idx * pitch + pitch / 2 - v.width / 2);
+      while (at <= -setW) at += setW;
+      while (at > setW) at -= setW;
+      x = at;
+      apply();
+    }
+
+    /* ---- pointer ---- */
+    track.addEventListener('click', function (e) {
+      var btn = closestBtn(e.target);
+      if (!btn || !track.contains(btn)) return;
+      var id = btn.getAttribute('data-tool');
+      if (selected === id) closeTool(false);
+      else openTool(id, btn);
+    });
+
+    /* Hover only names a logo. The rail keeps running at the same speed. */
+    track.addEventListener('pointerover', function (e) {
+      if (!fine) return;
+      var item = closestItem(e.target);
+      if (!item || !track.contains(item)) return;
+      if (e.relatedTarget && item.contains(e.relatedTarget)) return;
+      showTip(item);
+    });
+    track.addEventListener('pointerout', function (e) {
+      var item = closestItem(e.target);
+      if (!item) return;
+      if (e.relatedTarget && item.contains(e.relatedTarget)) return;
+      hideTip(item);
+    });
+    viewport.addEventListener('pointerleave', hideTips);
+
+    closeBtn.addEventListener('click', function () { closeTool(true); });
+
+    document.addEventListener('pointerdown', function (e) {
+      keyboard = false;
+      if (!selected) return;
+      if (root.contains(e.target)) return;
+      closeTool(false);
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && selected) { e.preventDefault(); closeTool(true); return; }
+      if (e.key === 'Shift' || e.key === 'Alt' || e.key === 'Control' || e.key === 'Meta') return;
+      keyboard = true;
+    }, true);
+
+    /* ---- keyboard ---- */
+    track.addEventListener('focusin', function (e) {
+      var btn = closestBtn(e.target);
+      if (!btn) return;
+      /* Pointer focus is not a pause; only keyboard focus stops the rail. */
+      focusWithin = keyboard;
+      reveal(btn);
+      if (keyboard) showTip(closestItem(btn)); else hideTips();
+      sync();
+    });
+    track.addEventListener('focusout', function (e) {
+      if (e.relatedTarget && track.contains(e.relatedTarget)) return;
+      focusWithin = false;
+      hideTips();
+      sync();
+    });
+    track.addEventListener('keydown', function (e) {
+      var btn = document.activeElement;
+      if (!btn || !btn.classList || !btn.classList.contains('toolrail-btn')) return;
+      var n = tools.length;
+      var idx = parseInt(btn.getAttribute('data-idx'), 10) || 0;
+      var next;
+      if (e.key === 'ArrowRight') next = (idx + 1) % n;
+      else if (e.key === 'ArrowLeft') next = (idx - 1 + n) % n;
+      else if (e.key === 'Home') next = 0;
+      else if (e.key === 'End') next = n - 1;
+      else return;
+      e.preventDefault();
+      keyboard = true;
+      var target = originals[next] && originals[next].querySelector('.toolrail-btn');
+      if (target) target.focus();
+    });
+
+    /* ---- lifecycle ---- */
+    function resize() {
+      if (reduce) { apply(); return; }
+      var phase = setW ? (-x / setW) : 0;
+      measure();
+      if (!setW) return;
+      var viewW = viewport.clientWidth || 0;
+      var need = Math.max(2, Math.ceil((viewW * 2) / setW) + 1);
+      if (need > copies || !track.querySelector('.toolrail-item[data-clone]')) build();
+      x = -phase * setW;
+      wrap();
+      apply();
+    }
+
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (entries) {
+        inView = entries[0].isIntersecting;
+        sync();
+      }, { threshold: 0.02 }).observe(viewport);
+    } else {
+      inView = true;
+    }
+
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) stop();
+      else { lastT = 0; sync(); }
+    });
+
+    window.addEventListener('pageshow', function () {
+      stop();
+      lastT = 0;
+      sync();
+    });
+
+    if ('ResizeObserver' in window) {
+      new ResizeObserver(function () { resize(); }).observe(viewport);
+    } else {
+      window.addEventListener('resize', resize);
+    }
+    window.addEventListener('orientationchange', function () { window.setTimeout(resize, 250); });
+
+    function onMotionPreference() {
+      reduce = reduceMQ.matches;
+      hideTips();
+      if (reduce) {
+        dropClones();
+        track.style.transform = '';
+        stop();
+      } else {
+        build();
+        x = 0;
+        apply();
+      }
+      sync();
+    }
+    function onHoverPreference() {
+      fine = hoverMQ.matches;
+      if (!fine) hideTips();
+    }
+    if (reduceMQ.addEventListener) reduceMQ.addEventListener('change', onMotionPreference);
+    else if (reduceMQ.addListener) reduceMQ.addListener(onMotionPreference);
+    if (hoverMQ.addEventListener) hoverMQ.addEventListener('change', onHoverPreference);
+    else if (hoverMQ.addListener) hoverMQ.addListener(onHoverPreference);
+
+    ensureTips();
+    build();
+    /* start mid-pattern so the first wrap is a full loop away */
+    x = -setW / 2;
+    wrap();
+    apply();
+    sync();
   })();
 </script>
 </body>
