@@ -3,17 +3,17 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Andrei Ebuenga — Remote Back-Office Operations Specialist</title>
-<meta name="description" content="Remote-ready back-office operations specialist: international order processing in SAP and Dynamics AX, data accuracy, reporting and clear written communication." />
+<title>Andrei Ebuenga — Application Support &amp; Operations Specialist</title>
+<meta name="description" content="Application support &amp; operations specialist: international order processing in SAP and Dynamics AX, SLA-bound validation checks, reporting automation and clear written communication." />
 <meta name="author" content="Andrei Dominic G. Ebuenga" />
 <meta name="theme-color" content="#111315" />
 <meta name="color-scheme" content="dark light" />
 <meta property="og:type" content="profile" />
-<meta property="og:title" content="Andrei Ebuenga — Remote Back-Office Operations Specialist" />
-<meta property="og:description" content="Quietly accurate. Loudly reliable. Back-office operations specialist for remote operations, admin and support roles." />
+<meta property="og:title" content="Andrei Ebuenga — Application Support &amp; Operations Specialist" />
+<meta property="og:description" content="Quietly accurate. Loudly reliable. Operations specialist moving into application support: SLA-bound checks, reporting automation and clear written communication." />
 <meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="Andrei Ebuenga — Remote Back-Office Operations Specialist" />
-<meta name="twitter:description" content="Quietly accurate. Loudly reliable. Back-office operations specialist for remote operations, admin and support roles." />
+<meta name="twitter:title" content="Andrei Ebuenga — Application Support &amp; Operations Specialist" />
+<meta name="twitter:description" content="Quietly accurate. Loudly reliable. Operations specialist moving into application support: SLA-bound checks, reporting automation and clear written communication." />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23111315'/%3E%3Cpath d='M20 45 32 19l12 26' fill='none' stroke='%23C6A878' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M25.5 36h13' stroke='%23F5F3EE' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E" />
 <style>
   /* Inter (variable, latin) embedded as a data URI — this file needs no network. */
@@ -576,6 +576,10 @@ if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
   .emphasis li b { color: var(--fg); font-weight: 500; }
   .emphasis .num { font-size: 0.72rem; letter-spacing: 0.16em; color: var(--gold-ink); padding-top: 0.25rem; }
 
+  /* Skills groups in the Tools section — same list rhythm, two columns when there is room */
+  .skills-groups { grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); column-gap: clamp(1.5rem, 4vw, 3rem); border-top: 0; }
+  .skills-groups li { border-top: 1px solid var(--line); }
+
   .profile-card {
     padding: 0; overflow: hidden;
     background: var(--card);
@@ -921,6 +925,21 @@ if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
   .store-policy i { height: 2px; background: rgba(245, 245, 242, 0.12); flex: 1; }
   .store-policy i:first-child { background: rgba(198, 168, 120, 0.5); }
 
+  .art--report { justify-content: center; }
+  .report-mail {
+    background: #171b1e; border: 1px solid rgba(245, 245, 242, 0.08);
+    border-radius: 4px; padding: 5% 6%; display: grid; gap: 6%;
+  }
+  .report-mail-top { display: flex; align-items: center; gap: 8px; }
+  .report-mail-top i { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); flex: none; }
+  .report-mail-top span { font-size: 0.58rem; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(245, 245, 242, 0.45); }
+  .report-mail-subject { margin: 0; font-size: 0.66rem; line-height: 1.5; color: rgba(245, 245, 242, 0.82); }
+  .report-mail-stats { display: flex; gap: 5%; }
+  .report-mail-stats div { flex: 1; display: grid; gap: 6px; border-top: 1px solid rgba(245, 245, 242, 0.12); padding-top: 6%; }
+  .report-mail-stats b { font-size: 0.72rem; font-weight: 500; color: var(--fg); }
+  .report-mail-stats i { height: 2px; background: rgba(245, 245, 242, 0.14); }
+  .report-mail-foot span { display: block; height: 2px; width: 45%; background: rgba(198, 168, 120, 0.45); }
+
   /* =========================================================
      Tools
      ========================================================= */
@@ -1155,6 +1174,15 @@ if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
     .project--b { grid-column: span 5; }
     .project--c { grid-column: span 5; }
     .project--d { grid-column: span 7; }
+    .project--e { grid-column: span 7; }
+    .project--feature {
+      grid-column: span 12;
+      display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr); align-items: stretch;
+    }
+    .project--feature .preview { aspect-ratio: auto; min-height: 22rem; border-bottom: 0; border-right: 1px solid var(--line); }
+    .project--feature .project-body { display: flex; flex-direction: column; justify-content: center; }
+    .project--feature .project-body > p { max-width: 44ch; }
+    .project--half { grid-column: span 6; }
     .preview { aspect-ratio: auto; height: 21rem; }
   }
   @media (max-width: 979px) {
@@ -1344,7 +1372,7 @@ if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
     <div class="hero-bg" aria-hidden="true"><div class="hero-ghost" id="heroGhost">OPERATIONS</div></div>
     <div class="container hero-inner">
       <div class="hero-top">
-        <p class="status"><span class="status-dot" aria-hidden="true"></span> Open to remote roles in operations, admin &amp; support</p>
+        <p class="status"><span class="status-dot" aria-hidden="true"></span> Open to application support &amp; operations roles</p>
         <p class="hero-index">Portfolio — 2026</p>
       </div>
 
@@ -1355,7 +1383,7 @@ if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
 
       <div class="hero-bottom">
         <div class="hero-intro">
-          <p class="hero-lede">Back-office operations specialist with over a year of high-volume international order processing in SAP and Dynamics AX. I bring the same accuracy, follow-through and clear written communication to remote operations, admin and support roles.</p>
+          <p class="hero-lede">I run high-volume international order operations under SLA in SAP, Microsoft Dynamics AX and CRM — validating data before release, chasing discrepancies to resolution, and writing the SOPs so the next person can repeat it. I also build the small tools that take the manual work out: an order tracker with Excel sync, a bulk barcode lookup, and a daily report that emails me its own stats.</p>
           <div class="hero-actions">
             <a class="btn btn--primary magnetic" href="#projects" data-magnetic>See my work <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
             <a class="btn btn--ghost" href="mailto:andreidominic.g.ebuenga@gmail.com?subject=CV%20Request&amp;body=Hello%20Andrei%2C%0D%0A%0D%0AI%20came%20across%20your%20portfolio%20and%20would%20like%20to%20request%20a%20copy%20of%20your%20CV.%0D%0A%0D%0AThank%20you." data-goatcounter-click="cv-download" data-goatcounter-title="CV download" data-goatcounter-no-session="1">Request CV <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-mail"/></svg></a>
@@ -1374,6 +1402,7 @@ if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
           <li><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-pin"/></svg> Olongapo City, Philippines</li>
           <li><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-clock"/></svg> UTC+8</li>
           <li><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-mail"/></svg> English with international teams</li>
+          <li><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-clipboard"/></svg> 1 yr 9 mos in SLA-bound order operations</li>
         </ul>
         <a class="scroll-cue" href="#metrics"><i aria-hidden="true"></i> Scroll</a>
       </div>
@@ -1414,17 +1443,17 @@ if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
     <div class="container about-grid">
       <div class="about-copy">
         <p class="eyebrow" data-reveal><b>01</b> — About</p>
-        <h2 class="display" data-reveal style="--i:1">Back-office operations, with an e-commerce edge.</h2>
-        <p class="lede" data-reveal style="--i:2">I work where orders, systems and people meet: validating what goes in, tracking what goes out, and documenting the steps in between so the work holds up under pressure.</p>
-        <p class="body-copy" data-reveal style="--i:3">My background is international order management inside a manufacturing company — SAP, Microsoft Dynamics AX and CRM, with email and reporting across markets. Alongside that, I'm completing structured Shopify operations training: store setup, product data, catalog hygiene and page audits, practiced on simulated datasets.</p>
+        <h2 class="display" data-reveal style="--i:1">Operations discipline, applied to application support.</h2>
+        <p class="lede" data-reveal style="--i:2">I work where orders, systems and people meet: validating what goes in, tracking what goes out, and documenting the steps in between so the work holds up under pressure. Most of what application support does, I already do daily — a queue with an SLA, a check before anything goes live, an exception chased to closure, and a report someone reads at 08:00.</p>
+        <p class="body-copy" data-reveal style="--i:3">My background is international order management inside a manufacturing company — SAP, Microsoft Dynamics AX and CRM, with email and reporting across markets. Alongside that, I'm completing 8 weeks of structured Shopify operations training on simulated data. I also build the internal tools I use: an order tracker with Excel sync, a bulk barcode lookup for AX, and the scheduled job that reports my own site's stats.</p>
 
         <ul class="emphasis">
-          <li data-reveal style="--i:0"><span class="num">01</span><span><b>International order management</b> — high-volume processing and validation.</span></li>
-          <li data-reveal style="--i:1"><span class="num">02</span><span><b>ERP systems</b> — SAP and Dynamics AX order flows and pricing checks.</span></li>
-          <li data-reveal style="--i:2"><span class="num">03</span><span><b>Cross-functional coordination</b> — Sales, Planning, Technical Support and Service.</span></li>
-          <li data-reveal style="--i:3"><span class="num">04</span><span><b>Product data management</b> — cleanup, standards and second-pass review.</span></li>
-          <li data-reveal style="--i:4"><span class="num">05</span><span><b>Shopify operations training</b> — store setup, listings, policies and audits.</span></li>
-          <li data-reveal style="--i:5"><span class="num">06</span><span><b>Reporting &amp; documentation</b> — Excel trackers, status reports and SOPs.</span></li>
+          <li data-reveal style="--i:0"><span class="num">01</span><span><b>SLA-bound order &amp; request handling</b> — high-volume processing, validation and follow-up.</span></li>
+          <li data-reveal style="--i:1"><span class="num">02</span><span><b>Exception handling</b> — discrepancies identified, corrected and escalated to the owning team.</span></li>
+          <li data-reveal style="--i:2"><span class="num">03</span><span><b>ERP systems</b> — SAP and Dynamics AX order flows, pricing and configuration checks.</span></li>
+          <li data-reveal style="--i:3"><span class="num">04</span><span><b>Checks &amp; reporting</b> — validation gates, Excel trackers, status reports, scheduled daily stats.</span></li>
+          <li data-reveal style="--i:4"><span class="num">05</span><span><b>Tooling</b> — browser tools I build and maintain to remove manual work.</span></li>
+          <li data-reveal style="--i:5"><span class="num">06</span><span><b>Documentation</b> — SOPs, checklists and process guides for clean handover.</span></li>
         </ul>
       </div>
 
@@ -1448,8 +1477,8 @@ if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
             <dd>SAP · Microsoft Dynamics AX · Dynamics CRM</dd>
           </div>
           <div class="profile-row">
-            <dt>E-commerce</dt>
-            <dd>Shopify operations (8-week training)</dd>
+            <dt>Training</dt>
+            <dd>Shopify operations · 8-week program (simulated data)</dd>
           </div>
         </dl>
         <p class="profile-note">Clear written English with international teams and accounts. Open to remote jobs, projects and trial tasks.</p>
@@ -1536,13 +1565,13 @@ if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
       <div class="projects-head">
         <div>
           <p class="eyebrow" data-reveal><b>03</b> — Selected work</p>
-          <h2 class="display" data-reveal style="--i:1; max-width:24ch">Work that shows the method, not just the output.</h2>
+          <h2 class="display" data-reveal style="--i:1; max-width:24ch">Systems I keep running.</h2>
         </div>
-        <p class="lede" data-reveal style="--i:2; margin-top:0; max-width:30ch; font-size:0.86rem">Two tools built for real use, plus two training projects with measured outcomes.</p>
+        <p class="lede" data-reveal style="--i:2; margin-top:0; max-width:30ch; font-size:0.86rem">Three systems I built and maintain: two internal tools, plus the daily report that runs alongside them.</p>
       </div>
 
       <div class="projects-grid">
-        <article class="project project--a" data-reveal>
+        <article class="project project--feature" data-reveal>
           <div class="preview preview--browser theme-dark">
             <div class="browser" role="group" aria-label="Order Management Tracker interface">
               <div class="browser-bar">
@@ -1608,7 +1637,7 @@ if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
           </div>
         </article>
 
-        <article class="project project--b" data-reveal style="--i:1">
+        <article class="project project--half" data-reveal style="--i:1">
           <div class="preview preview--tool theme-dark">
             <div class="browser">
               <div class="browser-bar">
@@ -1639,19 +1668,19 @@ if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
           </div>
         </article>
 
-        <article class="project project--c" data-reveal style="--i:2">
+        <article class="project project--half" data-reveal style="--i:2">
           <div class="preview theme-dark">
-            <span class="preview-label">Training sample</span>
+            <span class="preview-label">Personal project</span>
             <div class="preview-inner">
-              <div class="art art--audit">
-                <div class="ring-wrap" aria-hidden="true"><div class="ring" style="--p:92"></div><span class="ring-text">92%</span></div>
-                <div class="audit-rows" aria-hidden="true">
-                  <div><i></i><b></b></div>
-                  <div><i></i><b></b></div>
-                  <div><i></i><b></b></div>
-                  <div><i></i><b></b></div>
-                  <div><i></i><b></b></div>
-                  <div><i></i><b></b></div>
+              <div class="art art--report">
+                <div class="report-mail" aria-hidden="true">
+                  <div class="report-mail-top"><i></i><span>Daily report</span></div>
+                  <p class="report-mail-subject">Portfolio report — visitors + CV requests</p>
+                  <div class="report-mail-stats">
+                    <div><b>07:07</b><i></i></div>
+                    <div><b>Retry ×2</b><i></i></div>
+                  </div>
+                  <div class="report-mail-foot"><span></span></div>
                 </div>
               </div>
             </div>
@@ -1659,39 +1688,13 @@ if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
           <div class="project-body">
             <div class="project-meta">
               <span class="project-num">03</span>
-              <span class="project-kind">Audit</span>
+              <span class="project-kind">Python · GitHub Actions</span>
             </div>
-            <h3>Product Page Audit</h3>
-            <p>Four product pages checked against 16 criteria each — pricing, stock messages, images and alt text, claims, shipping, returns and SEO fields.</p>
+            <h3>Daily Report Automation</h3>
+            <p>A scheduled job that emails my site's stats every morning — previous-day window, retries on failure, a "Report failed" alert instead of silence, and a staleness warning when the data is old. Credentials stay in CI secrets, never in the code.</p>
             <div class="project-outcome">
-              <b>92% match</b>
-              <span>Against the trainer's answer key across 64 results.</span>
-            </div>
-          </div>
-        </article>
-
-        <article class="project project--d" data-reveal style="--i:3">
-          <div class="preview theme-dark">
-            <span class="preview-label">Training sample</span>
-            <div class="preview-inner">
-              <div class="art art--store">
-                <div class="store-tile"></div>
-                <div class="store-tile"></div>
-                <div class="store-tile"></div>
-                <div class="store-policy" aria-hidden="true"><i></i><i></i><i></i></div>
-              </div>
-            </div>
-          </div>
-          <div class="project-body">
-            <div class="project-meta">
-              <span class="project-num">04</span>
-              <span class="project-kind">Store setup</span>
-            </div>
-            <h3>Shopify Practice Store</h3>
-            <p>A full practice build: 5 products, 4 policy pages, shipping zones, test-mode payments and 3 test orders, documented in a step-by-step SOP.</p>
-            <div class="project-outcome">
-              <b>12-step checklist</b>
-              <span>For a repeatable store setup and handover.</span>
+              <b>Runs unattended daily</b>
+              <span>Failure surfaces as an alert, not as a silent zero.</span>
             </div>
           </div>
         </article>
@@ -1751,6 +1754,15 @@ if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
       <p class="eyebrow" data-reveal><b>05</b> — Tools &amp; systems</p>
       <h2 class="display" data-reveal style="--i:1; margin-top:1.5rem; max-width:18ch">The stack I work in.</h2>
       <p class="lede" data-reveal style="--i:2; max-width:52ch">The systems the order cycle runs on, the tools around them, and the ones I&rsquo;m training on.</p>
+
+      <p class="eyebrow" data-reveal style="margin-top:3rem">How it maps to a support desk</p>
+      <ul class="emphasis skills-groups">
+        <li data-reveal><span class="num">01</span><span><b>Support &amp; SLA handling</b> — high-volume order and request queues in SAP, Dynamics AX and CRM, worked to SLA and company policy. Discrepancies corrected and followed up with Sales, Production Planning, Technical Support and Customer Service until closed.</span></li>
+        <li data-reveal><span class="num">02</span><span><b>Checks &amp; monitoring</b> — a validation gate before release: details, pricing and configurations pre-checked in AX before anything moves to production in SAP. Second-pass review as standard, stale-case flagging in my dashboard, and a daily job that retries on failure and alerts instead of going quiet.</span></li>
+        <li data-reveal><span class="num">03</span><span><b>Data, reporting &amp; automation</b> — Excel trackers and status reports to management, CRM record hygiene, and a written data standard for supplier price lists. Reporting automation in Python: scheduled jobs, API pulls, text and HTML email delivery.</span></li>
+        <li data-reveal><span class="num">04</span><span><b>Tools &amp; systems</b> — daily: SAP, Dynamics AX, CRM, Outlook, Teams, Excel, Word, PowerPoint. Working: Google Sheets, Notion, HTML, CSS, JavaScript, Git &amp; GitHub Actions, Python, SMTP/TLS delivery. Training: Shopify, product import CSVs, Photoshop.</span></li>
+        <li data-reveal><span class="num">05</span><span><b>Documentation &amp; handover</b> — SOPs, process guides, a 12-step store-setup checklist and written demo documentation, so work continues when someone else picks it up.</span></li>
+      </ul>
 
       <div class="toolrail" id="toolsRail" data-toolrail>
         <div class="toolrail-stage" data-reveal>
